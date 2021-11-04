@@ -100,7 +100,11 @@ public:
     void handleProtectedBufferProbeInformation(GstPadProbeInfo*);
 #endif
 
+    void resetBufferMetadataCompleter();
+
 private:
+    class BufferMetadataCompleter;
+
     void resetPipeline();
     void checkEndOfAppend();
     void handleAppsrcAtLeastABufferLeft();
@@ -180,6 +184,7 @@ private:
     RefPtr<WebCore::TrackPrivateBase> m_track;
 
     GRefPtr<GstBuffer> m_pendingBuffer;
+    std::unique_ptr<BufferMetadataCompleter> m_bufferMetadataCompleter;
 };
 
 } // namespace WebCore.

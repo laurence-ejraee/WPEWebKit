@@ -129,7 +129,7 @@ static void appendPipelineErrorMessageCallback(GstBus*, GstMessage* message, App
 }
 
 // Auxiliary class to compute the sample duration when GStreamer provides an invalid one.
-class BufferMetadataCompleter {
+class AppendPipeline::BufferMetadataCompleter {
 public:
     BufferMetadataCompleter()
         : m_sampleDuration(MediaTime::invalidTime())
@@ -139,6 +139,13 @@ public:
     {
     }
 
+    void reset()
+    {
+        m_sampleDuration = MediaTime::invalidTime();
+        m_lastPts = MediaTime::invalidTime();
+        m_lastDts = MediaTime::invalidTime();
+        m_ptsOffset = MediaTime::invalidTime();
+    }
     void completeMissingMetadata(GstBuffer* buffer)
     {
         if (buffer) {
@@ -1127,6 +1134,8 @@ void AppendPipeline::connectDemuxerSrcPadToAppsinkFromAnyThread(GstPad* demuxerS
         } else
             GST_INFO("no parser");
 
+        if (!m_bufferMetadataCompleter)
+             m_bufferMetadataCompleter = std::make_unique<BufferMetadataCompleter>();
         gst_pad_add_probe(currentSrcPad.get(), GST_PAD_PROBE_TYPE_BUFFER,
             [] (GstPad*, GstPadProbeInfo* info, void* userData) -> GstPadProbeReturn {
                 ASSERT(GST_PAD_PROBE_INFO_TYPE(info) & GST_PAD_PROBE_TYPE_BUFFER);
@@ -1135,11 +1144,7 @@ void AppendPipeline::connectDemuxerSrcPadToAppsinkFromAnyThread(GstPad* demuxerS
                 completer->completeMissingMetadata(buffer);
                 return GST_PAD_PROBE_OK;
             },
-            new BufferMetadataCompleter(),
-            [] (gpointer userData) {
-                BufferMetadataCompleter* completer = static_cast<BufferMetadataCompleter*>(userData);
-                delete completer;
-            });
+            m_bufferMetadataCompleter.get(), nullptr);
 
         gst_pad_link(currentSrcPad.get(), appsinkSinkPad.get());
 
@@ -1360,6 +1365,7 @@ static void appendPipelineAppsinkCapsChanged(GObject* appsinkPad, GParamSpec*, A
     GstMessage* message = gst_message_new_application(GST_OBJECT(appsinkPad), structure);
     gst_bus_post(appendPipeline->bus(), message);
     GST_TRACE("appsink-caps-changed message posted to bus");
+    appendPipeline->resetBufferMetadataCompleter();
 }
 
 #if !LOG_DISABLED
@@ -1371,6 +1377,12 @@ static GstPadProbeReturn appendPipelinePadProbeDebugInformation(GstPad*, GstPadP
     return GST_PAD_PROBE_OK;
 }
 #endif
+
+void AppendPipeline::resetBufferMetadataCompleter()
+{
+    if (m_bufferMetadataCompleter)
+        m_bufferMetadataCompleter->reset();
+}
 
 #if ENABLE(ENCRYPTED_MEDIA)
 void AppendPipeline::cacheProtectionEvent(GstEvent* event)
