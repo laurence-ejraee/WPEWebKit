@@ -430,6 +430,27 @@ uint64_t toGstUnsigned64Time(const MediaTime& mediaTime)
     return time.timeValue();
 }
 
+int64_t toGstSigned64Time(const MediaTime& mediaTime)
+{
+    MediaTime time = mediaTime.toTimeScale(GST_SECOND);
+    if (time.isInvalid())
+        return GST_CLOCK_TIME_NONE;
+    return time.timeValue();
+}
+
+bool applyMediaTimeOffsetToGstUnsigned64Time(uint64_t& gstTime, const MediaTime& offset)
+{
+    bool didOverflow = false;
+    int64_t signedGstTime = gstTime;
+    signedGstTime += toGstSigned64Time(offset);
+    if (signedGstTime < 0) {
+        signedGstTime = 0;
+        didOverflow = true;
+    }
+    gstTime = signedGstTime;
+    return !didOverflow;
+}
+
 bool gstRegistryHasElementForMediaType(GList* elementFactories, const char* capsString)
 {
     GRefPtr<GstCaps> caps = adoptGRef(gst_caps_from_string(capsString));

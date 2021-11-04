@@ -75,6 +75,8 @@ Vector<String> extractGStreamerOptionsFromCommandLine();
 bool initializeGStreamer(std::optional<Vector<String>>&& = std::nullopt);
 unsigned getGstPlayFlag(const char* nick);
 uint64_t toGstUnsigned64Time(const MediaTime&);
+int64_t toGstSigned64Time(const MediaTime&);
+bool applyMediaTimeOffsetToGstUnsigned64Time(uint64_t&, const MediaTime&);
 
 inline GstClockTime toGstClockTime(const MediaTime &mediaTime)
 {

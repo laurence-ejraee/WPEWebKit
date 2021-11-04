@@ -182,8 +182,10 @@ public:
             }
 
             // Apply the offset to zero-align the first sample and also correct the next ones.
-            if (m_ptsOffset.isValid())
-                GST_BUFFER_PTS(buffer) += toGstClockTime(m_ptsOffset);
+            if (m_ptsOffset.isValid()) {
+                if (!applyMediaTimeOffsetToGstUnsigned64Time(GST_BUFFER_PTS(buffer), m_ptsOffset))
+                    m_ptsOffset = MediaTime::invalidTime();
+            }
 
             m_lastPts = MediaTime(GST_BUFFER_PTS(buffer), GST_SECOND);
             m_lastDts = MediaTime(GST_BUFFER_DTS(buffer), GST_SECOND);
