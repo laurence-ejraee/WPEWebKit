@@ -85,13 +85,17 @@ private:
 
     void disconnectDemuxerSrcPadFromAppsinkFromAnyThread(GstPad*);
     void connectDemuxerSrcPadToAppsinkFromStreamingThread(GstPad*);
-    void connectDemuxerSrcPadToAppsink(GstPad*);
+    void connectDemuxerSrcPadToAppsink();
 
     void resetPipeline();
 
     void consumeAppsinkAvailableSamples();
-
+    void createParserIfNeededAndLink();
+    void rebuildPipelineForNewCaps();
     GstPadProbeReturn appsrcEndOfAppendCheckerProbe(GstPadProbeInfo*);
+
+    void disconnectAppsinkAndRebuildPipeline();
+    GstPadProbeReturn rebuildPipelineIfNeeded(GstCaps*);
 
     static void staticInitialization();
 
@@ -121,6 +125,7 @@ private:
     GRefPtr<GstElement> m_parser; // Optional.
     // The demuxer has one src stream only, so only one appsink is needed and linked to it.
     GRefPtr<GstElement> m_appsink;
+    GRefPtr<GstPad> m_demuxerSrcPad;
 
     // Used to avoid unnecessary notifications per sample.
     // It is read and written from the streaming thread and written from the main thread.
@@ -148,6 +153,8 @@ private:
     AbortableTaskQueue m_taskQueue;
 
     GRefPtr<GstBuffer> m_pendingBuffer;
+
+    Lock m_pipelineConstructionLock;
 };
 
 } // namespace WebCore.
