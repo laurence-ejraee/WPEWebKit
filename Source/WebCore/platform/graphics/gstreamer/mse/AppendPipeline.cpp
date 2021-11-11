@@ -441,10 +441,12 @@ void AppendPipeline::handleApplicationMessage(GstMessage* message)
     const GstStructure* structure = gst_message_get_structure(message);
 
     if (gst_structure_has_name(structure, "demuxer-connect-to-appsink")) {
+#ifndef NDEBUG
         GRefPtr<GstPad> demuxerSrcPad;
         gst_structure_get(structure, "demuxer-src-pad", G_TYPE_OBJECT, &demuxerSrcPad.outPtr(), nullptr);
-        ASSERT(demuxerSrcPad);
-        connectDemuxerSrcPadToAppsink(demuxerSrcPad.get());
+        ASSERT(demuxerSrcPad && demuxerSrcPad == m_demuxerSrcPad.get());
+#endif
+        connectDemuxerSrcPadToAppsink();
         return;
     }
 
@@ -732,6 +734,62 @@ void AppendPipeline::parseDemuxerSrcPadCaps(GstCaps* demuxerSrcPadCaps)
     }
 }
 
+void AppendPipeline::disconnectAppsinkAndRebuildPipeline()
+{
+    if (m_parser) {
+        gst_element_set_state(m_parser.get(), GST_STATE_NULL);
+        gst_bin_remove(GST_BIN_CAST(m_pipeline.get()), m_parser.get());
+        m_parser = nullptr;
+    } else
+        gst_element_unlink(m_demux.get(), m_appsink.get());
+
+    createParserIfNeededAndLink();
+    GST_TRACE_OBJECT(m_pipeline.get(), "pipeline rebuild done");
+}
+
+void AppendPipeline::disconnectAppsinkSendEOSOnParserIfNeededAndRebuildPipeline()
+{
+    if (!m_parser) {
+        disconnectAppsinkAndRebuildPipeline();
+        return;
+    }
+
+    GRefPtr<GstPad> srcpad = adoptGRef(gst_element_get_static_pad(m_parser.get(), "src"));
+    gst_pad_add_probe(srcpad.get(), static_cast<GstPadProbeType>(GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM),
+        [](GstPad* pad, GstPadProbeInfo* info, gpointer userData) -> GstPadProbeReturn {
+            if (GST_EVENT_TYPE(GST_PAD_PROBE_INFO_DATA(info)) != GST_EVENT_EOS)
+                return GST_PAD_PROBE_PASS;
+
+            gst_pad_remove_probe(pad, GST_PAD_PROBE_INFO_ID(info));
+
+            AppendPipeline* appendPipeline = static_cast<AppendPipeline*>(userData);
+            appendPipeline->disconnectAppsinkAndRebuildPipeline();
+
+            return GST_PAD_PROBE_DROP;
+        }, this, nullptr);
+
+    GRefPtr<GstPad> sinkpad = adoptGRef(gst_element_get_static_pad(m_parser.get(), "sink"));
+    gst_pad_send_event(sinkpad.get(), gst_event_new_eos());
+}
+
+void AppendPipeline::rebuildPipelineForNewCaps()
+{
+    gst_pad_remove_probe(m_bufferMetadataCompleterPad.get(), m_bufferMetadataCompleterProbeID);
+    m_bufferMetadataCompleterPad = nullptr;
+    m_bufferMetadataCompleterProbeID = 0;
+
+    gst_pad_add_probe(m_demuxerSrcPad.get(), GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM, [](GstPad* pad, GstPadProbeInfo* info, gpointer userData) -> GstPadProbeReturn {
+        GST_TRACE("starting pipeline rebuild");
+
+        gst_pad_remove_probe(pad, GST_PAD_PROBE_INFO_ID(info));
+
+        AppendPipeline* appendPipeline = static_cast<AppendPipeline*>(userData);
+        appendPipeline->disconnectAppsinkSendEOSOnParserIfNeededAndRebuildPipeline();
+
+        return GST_PAD_PROBE_OK;
+    }, this, nullptr);
+}
+
 void AppendPipeline::appsinkCapsChanged()
 {
     ASSERT(WTF::isMainThread());
@@ -749,10 +807,13 @@ void AppendPipeline::appsinkCapsChanged()
     bool previousCapsWereNull = !m_appsinkCaps;
 
     if (m_appsinkCaps != caps) {
+        bool areCapsCompatible = g_str_equal(gst_structure_get_name(gst_caps_get_structure(m_appsinkCaps.get(), 0)), gst_structure_get_name(gst_caps_get_structure(caps.get(), 0)));
         m_appsinkCaps = WTFMove(caps);
         if (m_playerPrivate)
             m_playerPrivate->trackDetected(this, m_track, previousCapsWereNull);
         gst_element_set_state(m_pipeline.get(), GST_STATE_PLAYING);
+        if (!areCapsCompatible)
+            rebuildPipelineForNewCaps();
     }
 }
 
@@ -1056,6 +1117,49 @@ createOptionalParserForFormat(GstPad* demuxerSrcPad)
     return nullptr;
 }
 
+void AppendPipeline::createParserIfNeededAndLink(bool shouldSetPipelinePaused)
+{
+    // Some audio files unhelpfully omit the duration of frames in the container. We need to parse
+    // the contained audio streams in order to know the duration of the frames.
+    // This is known to be an issue with YouTube WebM files containing Opus audio as of YTTV2018.
+    GRefPtr<GstPad> currentSrcPad = m_demuxerSrcPad;
+    m_parser = createOptionalParserForFormat(currentSrcPad.get());
+    if (m_parser) {
+        GST_INFO("created parser %s", GST_ELEMENT_NAME(m_parser.get()));
+        gst_bin_add(GST_BIN(m_pipeline.get()), m_parser.get());
+        gst_element_sync_state_with_parent(m_parser.get());
+
+        GRefPtr<GstPad> parserSinkPad = adoptGRef(gst_element_get_static_pad(m_parser.get(), "sink"));
+        GRefPtr<GstPad> parserSrcPad = adoptGRef(gst_element_get_static_pad(m_parser.get(), "src"));
+
+        gst_pad_link(currentSrcPad.get(), parserSinkPad.get());
+        currentSrcPad = parserSrcPad;
+    } else
+        GST_INFO("no parser");
+
+    m_bufferMetadataCompleterPad = currentSrcPad;
+    if (!m_bufferMetadataCompleter)
+        m_bufferMetadataCompleter = std::make_unique<BufferMetadataCompleter>();
+    m_bufferMetadataCompleterProbeID = gst_pad_add_probe(m_bufferMetadataCompleterPad.get(), GST_PAD_PROBE_TYPE_BUFFER,
+        [] (GstPad*, GstPadProbeInfo* info, void* userData) -> GstPadProbeReturn {
+            ASSERT(GST_PAD_PROBE_INFO_TYPE(info) & GST_PAD_PROBE_TYPE_BUFFER);
+            BufferMetadataCompleter* completer = static_cast<BufferMetadataCompleter*>(userData);
+            GstBuffer* buffer = GST_PAD_PROBE_INFO_BUFFER(info);
+            completer->completeMissingMetadata(buffer);
+            return GST_PAD_PROBE_OK;
+        }, m_bufferMetadataCompleter.get(), nullptr);
+
+    GRefPtr<GstPad> appsinkSinkPad = adoptGRef(gst_element_get_static_pad(m_appsink.get(), "sink"));
+    gst_pad_link(currentSrcPad.get(), appsinkSinkPad.get());
+    gst_element_sync_state_with_parent(m_appsink.get());
+
+    if (shouldSetPipelinePaused)
+        gst_element_set_state(m_pipeline.get(), GST_STATE_PAUSED);
+    gst_element_sync_state_with_parent(m_appsink.get());
+
+    GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(GST_BIN(m_pipeline.get()), GST_DEBUG_GRAPH_SHOW_ALL, "webkit-after-link");
+}
+
 void AppendPipeline::connectDemuxerSrcPadToAppsinkFromAnyThread(GstPad* demuxerSrcPad)
 {
     if (!m_appsink)
@@ -1070,6 +1174,7 @@ void AppendPipeline::connectDemuxerSrcPadToAppsinkFromAnyThread(GstPad* demuxerS
         return;
     }
 
+    m_demuxerSrcPad = demuxerSrcPad;
     GRefPtr<GstPad> appsinkSinkPad = adoptGRef(gst_element_get_static_pad(m_appsink.get(), "sink"));
 
     // Only one stream per demuxer is supported.
@@ -1083,7 +1188,7 @@ void AppendPipeline::connectDemuxerSrcPadToAppsinkFromAnyThread(GstPad* demuxerS
         m_initialDuration = MediaTime::positiveInfiniteTime();
 
     if (WTF::isMainThread())
-        connectDemuxerSrcPadToAppsink(demuxerSrcPad);
+        connectDemuxerSrcPadToAppsink();
     else {
         // Call connectDemuxerSrcPadToAppsink() in the main thread and wait.
         LockHolder locker(m_padAddRemoveLock);
@@ -1113,47 +1218,7 @@ void AppendPipeline::connectDemuxerSrcPadToAppsinkFromAnyThread(GstPad* demuxerS
         GRefPtr<GstObject> parent = adoptGRef(gst_element_get_parent(m_appsink.get()));
         if (!parent)
             gst_bin_add(GST_BIN(m_pipeline.get()), m_appsink.get());
-
-        // Current head of the pipeline being built.
-        GRefPtr<GstPad> currentSrcPad = demuxerSrcPad;
-
-        // Some audio files unhelpfully omit the duration of frames in the container. We need to parse
-        // the contained audio streams in order to know the duration of the frames.
-        // This is known to be an issue with YouTube WebM files containing Opus audio as of YTTV2018.
-        m_parser = createOptionalParserForFormat(currentSrcPad.get());
-        if (m_parser) {
-            GST_INFO("created parser %s", GST_ELEMENT_NAME(m_parser.get()));
-            gst_bin_add(GST_BIN(m_pipeline.get()), m_parser.get());
-            gst_element_sync_state_with_parent(m_parser.get());
-
-            GRefPtr<GstPad> parserSinkPad = adoptGRef(gst_element_get_static_pad(m_parser.get(), "sink"));
-            GRefPtr<GstPad> parserSrcPad = adoptGRef(gst_element_get_static_pad(m_parser.get(), "src"));
-
-            gst_pad_link(currentSrcPad.get(), parserSinkPad.get());
-            currentSrcPad = parserSrcPad;
-        } else
-            GST_INFO("no parser");
-
-        if (!m_bufferMetadataCompleter)
-             m_bufferMetadataCompleter = std::make_unique<BufferMetadataCompleter>();
-        gst_pad_add_probe(currentSrcPad.get(), GST_PAD_PROBE_TYPE_BUFFER,
-            [] (GstPad*, GstPadProbeInfo* info, void* userData) -> GstPadProbeReturn {
-                ASSERT(GST_PAD_PROBE_INFO_TYPE(info) & GST_PAD_PROBE_TYPE_BUFFER);
-                BufferMetadataCompleter* completer = static_cast<BufferMetadataCompleter*>(userData);
-                GstBuffer* buffer = GST_PAD_PROBE_INFO_BUFFER(info);
-                completer->completeMissingMetadata(buffer);
-                return GST_PAD_PROBE_OK;
-            },
-            m_bufferMetadataCompleter.get(), nullptr);
-
-        gst_pad_link(currentSrcPad.get(), appsinkSinkPad.get());
-
-        gst_element_sync_state_with_parent(m_appsink.get());
-
-        gst_element_set_state(m_pipeline.get(), GST_STATE_PAUSED);
-        gst_element_sync_state_with_parent(m_appsink.get());
-
-        GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(GST_BIN(m_pipeline.get()), GST_DEBUG_GRAPH_SHOW_ALL, "webkit-after-link");
+        createParserIfNeededAndLink(true);
     }
 }
 
@@ -1173,14 +1238,14 @@ void AppendPipeline::transitionTo(AppendState nextState, bool isAlreadyLocked)
     m_appendStateTransitionCondition.notifyOne();
 }
 
-void AppendPipeline::connectDemuxerSrcPadToAppsink(GstPad* demuxerSrcPad)
+void AppendPipeline::connectDemuxerSrcPadToAppsink()
 {
     ASSERT(WTF::isMainThread());
     GST_DEBUG("Connecting to appsink");
 
     const String& type = m_sourceBufferPrivate->type().containerType();
     if (type.endsWith("webm"))
-        gst_pad_add_probe(demuxerSrcPad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, matroskademuxForceSegmentStartToEqualZero, nullptr, nullptr);
+        gst_pad_add_probe(m_demuxerSrcPad.get(), GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, matroskademuxForceSegmentStartToEqualZero, nullptr, nullptr);
 
     LockHolder locker(m_padAddRemoveLock);
     GRefPtr<GstPad> sinkSinkPad = adoptGRef(gst_element_get_static_pad(m_appsink.get(), "sink"));
@@ -1188,7 +1253,7 @@ void AppendPipeline::connectDemuxerSrcPadToAppsink(GstPad* demuxerSrcPad)
     // Only one stream per demuxer is supported.
     ASSERT(!gst_pad_is_linked(sinkSinkPad.get()));
 
-    GRefPtr<GstCaps> caps = adoptGRef(gst_pad_get_current_caps(GST_PAD(demuxerSrcPad)));
+    GRefPtr<GstCaps> caps = adoptGRef(gst_pad_get_current_caps(GST_PAD_CAST(m_demuxerSrcPad.get())));
 
     if (!caps || m_appendState == AppendState::Invalid || !m_playerPrivate) {
         m_padAddRemoveCondition.notifyOne();

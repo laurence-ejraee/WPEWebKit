@@ -87,7 +87,7 @@ public:
     void disconnectDemuxerSrcPadFromAppsinkFromAnyThread(GstPad*);
     void appendPipelineDemuxerNoMorePadsFromAnyThread();
     void connectDemuxerSrcPadToAppsinkFromAnyThread(GstPad*);
-    void connectDemuxerSrcPadToAppsink(GstPad*);
+    void connectDemuxerSrcPadToAppsink();
 
     void transitionTo(AppendState, bool isAlreadyLocked);
 
@@ -102,6 +102,9 @@ public:
 
     void resetBufferMetadataCompleter();
 
+    void disconnectAppsinkAndRebuildPipeline();
+    void disconnectAppsinkSendEOSOnParserIfNeededAndRebuildPipeline();
+
 private:
     class BufferMetadataCompleter;
 
@@ -112,9 +115,9 @@ private:
     void removeAppsrcDataLeavingProbe();
     void setAppsrcDataLeavingProbe();
     void demuxerNoMorePads();
-
     void consumeAppsinkAvailableSamples();
-
+    void createParserIfNeededAndLink(bool shouldSetPipelinePaused = false);
+    void rebuildPipelineForNewCaps();
     GstPadProbeReturn appsrcEndOfAppendCheckerProbe(GstPadProbeInfo*);
 
     static void staticInitialization();
@@ -143,6 +146,7 @@ private:
     GRefPtr<GstElement> m_parser; // Optional.
     // The demuxer has one src stream only, so only one appsink is needed and linked to it.
     GRefPtr<GstElement> m_appsink;
+    GRefPtr<GstPad> m_demuxerSrcPad;
 
     // Used to avoid unnecessary notifications per sample.
     // It is read and written from the streaming thread and written from the main thread.
@@ -184,6 +188,8 @@ private:
 
     GRefPtr<GstBuffer> m_pendingBuffer;
     std::unique_ptr<BufferMetadataCompleter> m_bufferMetadataCompleter;
+    unsigned long m_bufferMetadataCompleterProbeID { 0 };
+    GRefPtr<GstPad> m_bufferMetadataCompleterPad;
 };
 
 } // namespace WebCore.
