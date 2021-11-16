@@ -54,6 +54,7 @@ static GstStateChangeReturn webKitMediaCommonEncryptionDecryptorChangeState(GstE
 static void webKitMediaCommonEncryptionDecryptorSetContext(GstElement*, GstContext*);
 static void webKitMediaCommonEncryptionDecryptorFinalize(GObject*);
 static GstCaps* webkitMediaCommonEncryptionDecryptTransformCaps(GstBaseTransform*, GstPadDirection, GstCaps*, GstCaps*);
+static gboolean webkitMediaCommonEncryptionDecryptAcceptCaps(GstBaseTransform*, GstPadDirection, GstCaps*);
 static GstFlowReturn webkitMediaCommonEncryptionDecryptTransformInPlace(GstBaseTransform*, GstBuffer*);
 static gboolean webkitMediaCommonEncryptionDecryptSinkEventHandler(GstBaseTransform*, GstEvent*);
 static void webkitMediaCommonEncryptionDecryptProcessProtectionEvents(WebKitMediaCommonEncryptionDecrypt*, Ref<WebCore::SharedBuffer>&&);
@@ -80,7 +81,9 @@ static void webkit_media_common_encryption_decrypt_class_init(WebKitMediaCommonE
     GstBaseTransformClass* baseTransformClass = GST_BASE_TRANSFORM_CLASS(klass);
     baseTransformClass->transform_ip = GST_DEBUG_FUNCPTR(webkitMediaCommonEncryptionDecryptTransformInPlace);
     baseTransformClass->transform_caps = GST_DEBUG_FUNCPTR(webkitMediaCommonEncryptionDecryptTransformCaps);
+    baseTransformClass->accept_caps = GST_DEBUG_FUNCPTR(webkitMediaCommonEncryptionDecryptAcceptCaps);
     baseTransformClass->transform_ip_on_passthrough = FALSE;
+    baseTransformClass->passthrough_on_same_caps = TRUE;
     baseTransformClass->sink_event = GST_DEBUG_FUNCPTR(webkitMediaCommonEncryptionDecryptSinkEventHandler);
 
     klass->setupCipher = [](WebKitMediaCommonEncryptionDecrypt*, GstBuffer*) { return true; };
@@ -129,11 +132,22 @@ static GstCaps* webkitMediaCommonEncryptionDecryptTransformCaps(GstBaseTransform
         GUniquePtr<GstStructure> outgoingStructure = nullptr;
 
         if (direction == GST_PAD_SINK) {
-            if (!gst_structure_has_field(incomingStructure, "original-media-type"))
-                continue;
+            bool canDoPassthru = false;
+            if (!gst_structure_has_field(incomingStructure, "original-media-type")) {
+                // Let's check compatibility with src pad caps to see if we can do passthru.
+                GRefPtr<GstCaps> srcPadTemplateCaps = adoptGRef(gst_pad_get_pad_template_caps(GST_BASE_TRANSFORM_SRC_PAD(base)));
+                unsigned srcPadTemplateCapsSize = gst_caps_get_size(srcPadTemplateCaps.get());
+                for (unsigned j = 0; !canDoPassthru && j < srcPadTemplateCapsSize; ++j)
+                    canDoPassthru = gst_structure_can_intersect(incomingStructure, gst_caps_get_structure(srcPadTemplateCaps.get(), j));
+
+                if (!canDoPassthru)
+                    continue;
+            }
 
             outgoingStructure = GUniquePtr<GstStructure>(gst_structure_copy(incomingStructure));
-            gst_structure_set_name(outgoingStructure.get(), gst_structure_get_string(outgoingStructure.get(), "original-media-type"));
+
+            if (!canDoPassthru)
+                gst_structure_set_name(outgoingStructure.get(), gst_structure_get_string(outgoingStructure.get(), "original-media-type"));
 
             // Filter out the DRM related fields from the down-stream caps.
             for (int j = 0; j < gst_structure_n_fields(incomingStructure); ++j) {
@@ -148,35 +162,38 @@ static GstCaps* webkitMediaCommonEncryptionDecryptTransformCaps(GstBaseTransform
             }
         } else {
             outgoingStructure = GUniquePtr<GstStructure>(gst_structure_copy(incomingStructure));
-            // Filter out the video related fields from the up-stream caps,
-            // because they are not relevant to the input caps of this element and
-            // can cause caps negotiation failures with adaptive bitrate streams.
-            for (int index = gst_structure_n_fields(outgoingStructure.get()) - 1; index >= 0; --index) {
-                const gchar* fieldName = gst_structure_nth_field_name(outgoingStructure.get(), index);
-                GST_TRACE("Check field \"%s\" for removal", fieldName);
 
-                if (!g_strcmp0(fieldName, "base-profile")
-                    || !g_strcmp0(fieldName, "codec_data")
-                    || !g_strcmp0(fieldName, "height")
-                    || !g_strcmp0(fieldName, "framerate")
-                    || !g_strcmp0(fieldName, "level")
-                    || !g_strcmp0(fieldName, "pixel-aspect-ratio")
-                    || !g_strcmp0(fieldName, "profile")
-                    || !g_strcmp0(fieldName, "rate")
-                    || !g_strcmp0(fieldName, "width")) {
-                    gst_structure_remove_field(outgoingStructure.get(), fieldName);
-                    GST_TRACE("Removing field %s", fieldName);
+            if (!gst_base_transform_is_passthrough(base)) {
+                // Filter out the video related fields from the up-stream caps,
+                // because they are not relevant to the input caps of this element and
+                // can cause caps negotiation failures with adaptive bitrate streams.
+                for (int index = gst_structure_n_fields(outgoingStructure.get()) - 1; index >= 0; --index) {
+                    const gchar* fieldName = gst_structure_nth_field_name(outgoingStructure.get(), index);
+                    GST_TRACE("Check field \"%s\" for removal", fieldName);
+
+                    if (!g_strcmp0(fieldName, "base-profile")
+                        || !g_strcmp0(fieldName, "codec_data")
+                        || !g_strcmp0(fieldName, "height")
+                        || !g_strcmp0(fieldName, "framerate")
+                        || !g_strcmp0(fieldName, "level")
+                        || !g_strcmp0(fieldName, "pixel-aspect-ratio")
+                        || !g_strcmp0(fieldName, "profile")
+                        || !g_strcmp0(fieldName, "rate")
+                        || !g_strcmp0(fieldName, "width")) {
+                        gst_structure_remove_field(outgoingStructure.get(), fieldName);
+                        GST_TRACE("Removing field %s", fieldName);
+                    }
                 }
+
+                gst_structure_set(outgoingStructure.get(), "original-media-type", G_TYPE_STRING, gst_structure_get_name(incomingStructure), nullptr);
+
+                WebKitMediaCommonEncryptionDecryptPrivate* priv = self->priv;
+                LockHolder locker(priv->m_mutex);
+
+                if (webkitMediaCommonEncryptionDecryptIsCDMInstanceAvailable(self))
+                    gst_structure_set_name(outgoingStructure.get(),
+                        WebCore::GStreamerEMEUtilities::isUnspecifiedKeySystem(priv->m_cdmInstance->keySystem()) ? "application/x-webm-enc" : "application/x-cenc");
             }
-
-            gst_structure_set(outgoingStructure.get(), "original-media-type", G_TYPE_STRING, gst_structure_get_name(incomingStructure), nullptr);
-
-            WebKitMediaCommonEncryptionDecryptPrivate* priv = self->priv;
-            LockHolder locker(priv->m_mutex);
-
-            if (webkitMediaCommonEncryptionDecryptIsCDMInstanceAvailable(self))
-                gst_structure_set_name(outgoingStructure.get(),
-                    WebCore::GStreamerEMEUtilities::isUnspecifiedKeySystem(priv->m_cdmInstance->keySystem()) ? "application/x-webm-enc" : "application/x-cenc");
         }
 
         bool duplicate = false;
@@ -203,6 +220,20 @@ static GstCaps* webkitMediaCommonEncryptionDecryptTransformCaps(GstBaseTransform
 
     GST_LOG_OBJECT(base, "returning %" GST_PTR_FORMAT, transformedCaps);
     return transformedCaps;
+}
+
+static gboolean webkitMediaCommonEncryptionDecryptAcceptCaps(GstBaseTransform* trans, GstPadDirection direction, GstCaps* caps)
+{
+    gboolean result = GST_BASE_TRANSFORM_CLASS(parent_class)->accept_caps(trans, direction, caps);
+
+    if (result || direction == GST_PAD_SRC)
+        return result;
+
+    GRefPtr<GstCaps> srcPadTemplateCaps = adoptGRef(gst_pad_get_pad_template_caps(GST_BASE_TRANSFORM_SRC_PAD(trans)));
+    result = gst_caps_can_intersect(caps, srcPadTemplateCaps.get());
+    GST_TRACE_OBJECT(trans, "attempted to match %" GST_PTR_FORMAT " with the src pad template caps %" GST_PTR_FORMAT " to see if we can go passthru mode, result %s", caps, srcPadTemplateCaps.get(), boolForPrinting(result));
+
+    return result;
 }
 
 static void attemptToDecryptWithLocalInstance(WebKitMediaCommonEncryptionDecrypt* self, const Ref<WebCore::SharedBuffer>& keyID)
