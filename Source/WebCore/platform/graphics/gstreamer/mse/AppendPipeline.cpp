@@ -747,11 +747,28 @@ void AppendPipeline::disconnectAppsinkAndRebuildPipeline()
     GST_TRACE_OBJECT(m_pipeline.get(), "pipeline rebuild done");
 }
 
-void AppendPipeline::disconnectAppsinkSendEOSOnParserIfNeededAndRebuildPipeline()
+GstPadProbeReturn AppendPipeline::rebuildPipelineIfNeeded(GstCaps* caps)
 {
+    bool areCapsCompatible;
+
+    {
+        LockHolder locker(m_pipelineConstructionLock);
+        areCapsCompatible = g_str_equal(gst_structure_get_name(gst_caps_get_structure(m_appsinkCaps.get(), 0)), gst_structure_get_name(gst_caps_get_structure(caps, 0)));
+        GST_TRACE_OBJECT(m_pipeline.get(), "new caps %" GST_PTR_FORMAT ", current caps %" GST_PTR_FORMAT ", caps are %s", caps, m_appsinkCaps.get(), areCapsCompatible ? "compatible" : "incompatible");
+    }
+
+    if (areCapsCompatible)
+        return GST_PAD_PROBE_PASS;
+
+    GST_TRACE_OBJECT(m_pipeline.get(), "starting pipeline rebuild");
+
+    gst_pad_remove_probe(m_bufferMetadataCompleterPad.get(), m_bufferMetadataCompleterProbeID);
+    m_bufferMetadataCompleterPad = nullptr;
+    m_bufferMetadataCompleterProbeID = 0;
+
     if (!m_parser) {
         disconnectAppsinkAndRebuildPipeline();
-        return;
+        return GST_PAD_PROBE_PASS;
     }
 
     GRefPtr<GstPad> srcpad = adoptGRef(gst_element_get_static_pad(m_parser.get(), "src"));
@@ -770,24 +787,8 @@ void AppendPipeline::disconnectAppsinkSendEOSOnParserIfNeededAndRebuildPipeline(
 
     GRefPtr<GstPad> sinkpad = adoptGRef(gst_element_get_static_pad(m_parser.get(), "sink"));
     gst_pad_send_event(sinkpad.get(), gst_event_new_eos());
-}
 
-void AppendPipeline::rebuildPipelineForNewCaps()
-{
-    gst_pad_remove_probe(m_bufferMetadataCompleterPad.get(), m_bufferMetadataCompleterProbeID);
-    m_bufferMetadataCompleterPad = nullptr;
-    m_bufferMetadataCompleterProbeID = 0;
-
-    gst_pad_add_probe(m_demuxerSrcPad.get(), GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM, [](GstPad* pad, GstPadProbeInfo* info, gpointer userData) -> GstPadProbeReturn {
-        GST_TRACE("starting pipeline rebuild");
-
-        gst_pad_remove_probe(pad, GST_PAD_PROBE_INFO_ID(info));
-
-        AppendPipeline* appendPipeline = static_cast<AppendPipeline*>(userData);
-        appendPipeline->disconnectAppsinkSendEOSOnParserIfNeededAndRebuildPipeline();
-
-        return GST_PAD_PROBE_OK;
-    }, this, nullptr);
+    return GST_PAD_PROBE_PASS;
 }
 
 void AppendPipeline::appsinkCapsChanged()
@@ -807,13 +808,13 @@ void AppendPipeline::appsinkCapsChanged()
     bool previousCapsWereNull = !m_appsinkCaps;
 
     if (m_appsinkCaps != caps) {
-        bool areCapsCompatible = g_str_equal(gst_structure_get_name(gst_caps_get_structure(m_appsinkCaps.get(), 0)), gst_structure_get_name(gst_caps_get_structure(caps.get(), 0)));
-        m_appsinkCaps = WTFMove(caps);
+        {
+            LockHolder locker(m_pipelineConstructionLock);
+            m_appsinkCaps = WTFMove(caps);
+        }
         if (m_playerPrivate)
             m_playerPrivate->trackDetected(this, m_track, previousCapsWereNull);
         gst_element_set_state(m_pipeline.get(), GST_STATE_PLAYING);
-        if (!areCapsCompatible)
-            rebuildPipelineForNewCaps();
     }
 }
 
@@ -1187,9 +1188,10 @@ void AppendPipeline::connectDemuxerSrcPadToAppsinkFromAnyThread(GstPad* demuxerS
     else
         m_initialDuration = MediaTime::positiveInfiniteTime();
 
-    if (WTF::isMainThread())
+    if (WTF::isMainThread()) {
+        LockHolder locker(m_pipelineConstructionLock);
         connectDemuxerSrcPadToAppsink();
-    else {
+    } else {
         // Call connectDemuxerSrcPadToAppsink() in the main thread and wait.
         LockHolder locker(m_pipelineConstructionLock);
         if (!m_playerPrivate)
@@ -1220,6 +1222,22 @@ void AppendPipeline::connectDemuxerSrcPadToAppsinkFromAnyThread(GstPad* demuxerS
             gst_bin_add(GST_BIN(m_pipeline.get()), m_appsink.get());
         createParserIfNeededAndLink(true);
     }
+
+    // Probe to monitor the caps in the demuxer and if they change, begin the pipeline rebuild.
+    gst_pad_add_probe(m_demuxerSrcPad.get(), GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM, [](GstPad*, GstPadProbeInfo* info, gpointer userData) -> GstPadProbeReturn {
+        if (!(GST_PAD_PROBE_INFO_TYPE(info) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM))
+            return GST_PAD_PROBE_PASS;
+
+        GstEvent* event = gst_pad_probe_info_get_event(info);
+        if (GST_EVENT_TYPE(event) != GST_EVENT_CAPS)
+            return GST_PAD_PROBE_PASS;
+
+        GstCaps* caps = nullptr;
+        gst_event_parse_caps(event, &caps);
+
+        AppendPipeline* appendPipeline = static_cast<AppendPipeline*>(userData);
+        return appendPipeline->rebuildPipelineIfNeeded(caps);
+    }, this, nullptr);
 }
 
 void AppendPipeline::transitionTo(AppendState nextState, bool isAlreadyLocked)

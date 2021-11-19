@@ -103,7 +103,7 @@ public:
     void resetBufferMetadataCompleter();
 
     void disconnectAppsinkAndRebuildPipeline();
-    void disconnectAppsinkSendEOSOnParserIfNeededAndRebuildPipeline();
+    GstPadProbeReturn rebuildPipelineIfNeeded(GstCaps*);
 
 private:
     class BufferMetadataCompleter;
@@ -117,7 +117,6 @@ private:
     void demuxerNoMorePads();
     void consumeAppsinkAvailableSamples();
     void createParserIfNeededAndLink(bool shouldSetPipelinePaused = false);
-    void rebuildPipelineForNewCaps();
     GstPadProbeReturn appsrcEndOfAppendCheckerProbe(GstPadProbeInfo*);
 
     static void staticInitialization();
