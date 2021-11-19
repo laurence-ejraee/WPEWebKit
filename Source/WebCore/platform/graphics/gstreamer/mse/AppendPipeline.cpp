@@ -309,9 +309,9 @@ AppendPipeline::~AppendPipeline()
     setAppendState(AppendState::Invalid);
 
     {
-        LockHolder locker(m_padAddRemoveLock);
+        LockHolder locker(m_pipelineConstructionLock);
         m_playerPrivate = nullptr;
-        m_padAddRemoveCondition.notifyOne();
+        m_pipelineConstructionCondition.notifyOne();
     }
 
     if (m_appsink) {
@@ -400,9 +400,9 @@ void AppendPipeline::clearPlayerPrivate()
     setAppendState(AppendState::Invalid);
 
     {
-        LockHolder locker(m_padAddRemoveLock);
+        LockHolder locker(m_pipelineConstructionLock);
         m_playerPrivate = nullptr;
-        m_padAddRemoveCondition.notifyOne();
+        m_pipelineConstructionCondition.notifyOne();
     }
 
     if (m_appsink) {
@@ -1191,7 +1191,7 @@ void AppendPipeline::connectDemuxerSrcPadToAppsinkFromAnyThread(GstPad* demuxerS
         connectDemuxerSrcPadToAppsink();
     else {
         // Call connectDemuxerSrcPadToAppsink() in the main thread and wait.
-        LockHolder locker(m_padAddRemoveLock);
+        LockHolder locker(m_pipelineConstructionLock);
         if (!m_playerPrivate)
             return;
 
@@ -1200,7 +1200,7 @@ void AppendPipeline::connectDemuxerSrcPadToAppsinkFromAnyThread(GstPad* demuxerS
         gst_bus_post(m_bus.get(), message);
         GST_TRACE("demuxer-connect-to-appsink message posted to bus, waiting...");
 
-        m_padAddRemoveCondition.wait(m_padAddRemoveLock);
+        m_pipelineConstructionCondition.wait(m_pipelineConstructionLock);
 
         if (!m_playerPrivate)
             return;
@@ -1247,7 +1247,7 @@ void AppendPipeline::connectDemuxerSrcPadToAppsink()
     if (type.endsWith("webm"))
         gst_pad_add_probe(m_demuxerSrcPad.get(), GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, matroskademuxForceSegmentStartToEqualZero, nullptr, nullptr);
 
-    LockHolder locker(m_padAddRemoveLock);
+    LockHolder locker(m_pipelineConstructionLock);
     GRefPtr<GstPad> sinkSinkPad = adoptGRef(gst_element_get_static_pad(m_appsink.get(), "sink"));
 
     // Only one stream per demuxer is supported.
@@ -1256,7 +1256,7 @@ void AppendPipeline::connectDemuxerSrcPadToAppsink()
     GRefPtr<GstCaps> caps = adoptGRef(gst_pad_get_current_caps(GST_PAD_CAST(m_demuxerSrcPad.get())));
 
     if (!caps || m_appendState == AppendState::Invalid || !m_playerPrivate) {
-        m_padAddRemoveCondition.notifyOne();
+        m_pipelineConstructionCondition.notifyOne();
         return;
     }
 
@@ -1292,7 +1292,7 @@ void AppendPipeline::connectDemuxerSrcPadToAppsink()
         // This is going to cause an error which will detach the SourceBuffer and tear down this
         // AppendPipeline, so we need the padAddRemove lock released before continuing.
         m_track = nullptr;
-        m_padAddRemoveCondition.notifyOne();
+        m_pipelineConstructionCondition.notifyOne();
         locker.unlockEarly();
         didReceiveInitializationSegment();
         return;
@@ -1305,7 +1305,7 @@ void AppendPipeline::connectDemuxerSrcPadToAppsink()
     if (m_playerPrivate)
         m_playerPrivate->trackDetected(this, m_track, true);
 
-    m_padAddRemoveCondition.notifyOne();
+    m_pipelineConstructionCondition.notifyOne();
 }
 
 void AppendPipeline::disconnectDemuxerSrcPadFromAppsinkFromAnyThread(GstPad* demuxerSrcPad)

@@ -155,8 +155,8 @@ private:
     // queue, instead of it growing unbounded.
     std::atomic_flag m_wasBusAlreadyNotifiedOfAvailableSamples;
 
-    Lock m_padAddRemoveLock;
-    Condition m_padAddRemoveCondition;
+    Lock m_pipelineConstructionLock;
+    Condition m_pipelineConstructionCondition;
     Lock m_appendStateTransitionLock;
     Condition m_appendStateTransitionCondition;
 
