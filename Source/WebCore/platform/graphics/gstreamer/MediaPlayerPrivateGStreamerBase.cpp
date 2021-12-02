@@ -253,12 +253,12 @@ public:
         m_size = IntSize(GST_VIDEO_INFO_WIDTH(&videoInfo), GST_VIDEO_INFO_HEIGHT(&videoInfo));
         m_hasAlphaChannel = GST_VIDEO_INFO_HAS_ALPHA(&videoInfo);
         m_buffer = gst_sample_get_buffer(sample);
-        if (UNLIKELY(!GST_IS_BUFFER(m_buffer)))
+        if (UNLIKELY(!GST_IS_BUFFER(m_buffer.get())))
             return;
 
         // If info and meta dimensions aren't the same, gst_video_frame_map() shows a CRITICAL error.
         // This can happen on prerolling (eg: on PLAYING->PAUSED) after a quality change, because the first frame (old quality) is returned.
-        GstVideoMeta* meta = gst_buffer_get_video_meta(m_buffer);
+        GstVideoMeta* meta = gst_buffer_get_video_meta(m_buffer.get());
         if (UNLIKELY(!(videoInfo.width == int(meta->width) && videoInfo.height == int(meta->height))))
             return;
 
@@ -266,7 +266,7 @@ public:
         m_flags = flags | (m_hasAlphaChannel ? TextureMapperGL::ShouldBlend : 0) | TEXTURE_MAPPER_COLOR_CONVERT_FLAG;
 
         if (gstGLEnabled) {
-            m_isMapped = gst_video_frame_map(&m_videoFrame, &videoInfo, m_buffer, static_cast<GstMapFlags>(GST_MAP_READ | GST_MAP_GL));
+            m_isMapped = gst_video_frame_map(&m_videoFrame, &videoInfo, m_buffer.get(), static_cast<GstMapFlags>(GST_MAP_READ | GST_MAP_GL));
             if (m_isMapped)
                 m_textureID = *reinterpret_cast<GLuint*>(m_videoFrame.data[0]);
         } else
@@ -274,7 +274,7 @@ public:
 
         {
             m_textureID = 0;
-            m_isMapped = gst_video_frame_map(&m_videoFrame, &videoInfo, m_buffer, GST_MAP_READ);
+            m_isMapped = gst_video_frame_map(&m_videoFrame, &videoInfo, m_buffer.get(), GST_MAP_READ);
             if (m_isMapped) {
                 // Right now the TextureMapper only supports chromas with one plane
                 ASSERT(GST_VIDEO_INFO_N_PLANES(&videoInfo) == 1);
@@ -299,7 +299,7 @@ public:
     {
         ASSERT(!m_textureID);
         GstVideoGLTextureUploadMeta* meta;
-        if (m_buffer && (meta = gst_buffer_get_video_gl_texture_upload_meta(m_buffer))) {
+        if (m_buffer && (meta = gst_buffer_get_video_gl_texture_upload_meta(m_buffer.get()))) {
             if (meta->n_textures == 1) { // BRGx & BGRA formats use only one texture.
                 guint ids[4] = { texture.id(), 0, 0, 0 };
 
@@ -321,7 +321,7 @@ public:
     }
 
 private:
-    GstBuffer* m_buffer;
+    GRefPtr<GstBuffer> m_buffer;
     GstVideoFrame m_videoFrame { };
     IntSize m_size;
     bool m_hasAlphaChannel;
