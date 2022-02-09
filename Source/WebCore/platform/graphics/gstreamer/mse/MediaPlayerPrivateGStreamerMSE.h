@@ -116,7 +116,7 @@ private:
     bool m_gstSeekCompleted = true;
     RefPtr<MediaSourcePrivateClient> m_mediaSource;
     RefPtr<MediaSourcePrivateGStreamer> m_mediaSourcePrivate;
-    MediaTime m_mediaTimeDuration;
+    MediaTime m_mediaTimeDuration { MediaTime::invalidTime() };
     bool m_mseSeekCompleted = true;
     bool m_areDurationChangesBlocked = false;
     bool m_shouldReportDurationWhenUnblocking = false;
