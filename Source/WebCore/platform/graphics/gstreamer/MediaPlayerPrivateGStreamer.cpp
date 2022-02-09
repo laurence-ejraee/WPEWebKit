@@ -3693,7 +3693,7 @@ InitData MediaPlayerPrivateGStreamer::parseInitDataFromProtectionMessage(GstMess
             GstBuffer* data = nullptr;
             gst_event_parse_protection(event.get(), &eventKeySystemId, &data, nullptr);
 
-            initData.append({eventKeySystemId, data});
+            initData.append({GStreamerEMEUtilities::uuidToKeySystem(eventKeySystemId), data});
             m_handledProtectionEvents.add(GST_EVENT_SEQNUM(event.get()));
         }
     }
@@ -3808,7 +3808,7 @@ void MediaPlayerPrivateGStreamer::handleProtectionEvent(GstEvent* event)
     const char* eventKeySystemUUID = nullptr;
     GstBuffer* initData = nullptr;
     gst_event_parse_protection(event, &eventKeySystemUUID, &initData, nullptr);
-    initializationDataEncountered({eventKeySystemUUID, initData});
+    initializationDataEncountered({ GStreamerEMEUtilities::uuidToKeySystem(eventKeySystemUUID), initData });
 }
 
 bool MediaPlayerPrivateGStreamer::waitingForKey() const
