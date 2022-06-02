@@ -136,7 +136,7 @@ void MediaPlayerPrivateGStreamerMSE::load(const String& url, MediaSourcePrivateC
     m_mediaSource = mediaSource;
 
     if (!m_playbackPipeline)
-        m_playbackPipeline = PlaybackPipeline::create();
+        m_playbackPipeline = PlaybackPipeline::create(makeWeakPtr(*this));
 
     m_mediaSourcePrivate = MediaSourcePrivateGStreamer::open(*m_mediaSource.get(), *this);
 

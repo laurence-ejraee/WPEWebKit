@@ -45,9 +45,9 @@ class MediaSourcePrivateGStreamer;
 
 class PlaybackPipeline: public RefCounted<PlaybackPipeline> {
 public:
-    static Ref<PlaybackPipeline> create()
+    static Ref<PlaybackPipeline> create(WeakPtr<MediaPlayerPrivateGStreamerMSE>&& player)
     {
-        return adoptRef(*new PlaybackPipeline());
+        return adoptRef(*new PlaybackPipeline(WTFMove(player)));
     }
 
     virtual ~PlaybackPipeline() = default;
@@ -71,8 +71,14 @@ public:
 
     GstElement* pipeline();
 private:
-    PlaybackPipeline() = default;
+
+    PlaybackPipeline(WeakPtr<MediaPlayerPrivateGStreamerMSE>&& player)
+        : m_player(WTFMove(player))
+    {
+    }
+
     GRefPtr<WebKitMediaSrc> m_webKitMediaSrc;
+    WeakPtr<MediaPlayerPrivateGStreamerMSE> m_player;
 };
 
 } // namespace WebCore.

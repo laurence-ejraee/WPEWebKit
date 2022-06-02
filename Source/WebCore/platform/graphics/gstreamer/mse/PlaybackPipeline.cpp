@@ -286,21 +286,21 @@ void PlaybackPipeline::markEndOfStream(MediaSourcePrivate::EndOfStreamStatus)
         gst_app_src_end_of_stream(appsrc);
 }
 
-GstPadProbeReturn segmentFixerProbe(GstPad*, GstPadProbeInfo* info, gpointer)
+GstPadProbeReturn segmentFixerProbe(GstPad*, GstPadProbeInfo* info, gpointer userData)
 {
     GstEvent* event = GST_EVENT(info->data);
 
     if (GST_EVENT_TYPE(event) != GST_EVENT_SEGMENT)
         return GST_PAD_PROBE_OK;
 
+    GstSegment* newSegment = static_cast<GstSegment*>(userData);
     GstSegment* segment = nullptr;
     gst_event_parse_segment(event, const_cast<const GstSegment**>(&segment));
+    ASSERT(segment);
+    gst_segment_copy_into(newSegment, segment);
 
-    GST_TRACE("Fixed segment base time from %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-        GST_TIME_ARGS(segment->base), GST_TIME_ARGS(segment->start));
+    GST_TRACE("segment fixed in event %" GST_PTR_FORMAT, event);
 
-    segment->base = segment->start;
-    segment->flags = static_cast<GstSegmentFlags>(0);
 
     return GST_PAD_PROBE_REMOVE;
 }
@@ -363,20 +363,38 @@ void PlaybackPipeline::flush(AtomString trackId)
     if (!gst_element_send_event(GST_ELEMENT(appsrc), gst_event_new_flush_start()))
         GST_WARNING("Failed to send flush-start event for trackId=%s", trackId.string().utf8().data());
 
-    GUniquePtr<GstSegment> segment(gst_segment_new());
-    gst_segment_init(segment.get(), GST_FORMAT_TIME);
-    gst_segment_do_seek(segment.get(), rate, GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
-        GST_SEEK_TYPE_SET, position, GST_SEEK_TYPE_SET, stop, nullptr);
+    GRefPtr<GstElement> sink;
+    switch(stream->type) {
+    case MediaSourceStreamTypeGStreamer::Video:
+        sink = m_player->videoSink();
+        break;
+    case MediaSourceStreamTypeGStreamer::Audio:
+        sink = m_player->audioSink();
+        break;
+    default:
+        GST_WARNING("unexpected stream type %u", stream->type);
+        break;
+    }
+    while (GST_IS_BIN(sink.get())) {
+        GUniquePtr<GstIterator> iter(gst_bin_iterate_sinks(GST_BIN_CAST(sink.get())));
+        GValue returnValue = G_VALUE_INIT;
+        auto result = gst_iterator_next(iter.get(), &returnValue);
+        ASSERT_UNUSED(result, result == GST_ITERATOR_OK);
+        sink = adoptGRef(GST_ELEMENT(g_value_dup_object(&returnValue)));
+        g_value_unset(&returnValue);
+    }
+
+    ASSERT(GST_IS_BASE_SINK(sink.get()));
+    GstSegment* segment = &GST_BASE_SINK_CAST(sink.get())->segment;
 
     GRefPtr<GstPad> sinkPad = gst_element_get_static_pad(appsrc, "src");
     GRefPtr<GstPad> srcPad = sinkPad ? gst_pad_get_peer(sinkPad.get()) : nullptr;
     if (srcPad)
-        gst_pad_add_probe(srcPad.get(), GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, segmentFixerProbe, nullptr, nullptr);
+        gst_pad_add_probe(srcPad.get(), GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, segmentFixerProbe, gst_segment_copy(segment), (GDestroyNotify) gst_segment_free);
 
-    GST_DEBUG_OBJECT(appsrc, "Sending new seamless segment: [%" GST_TIME_FORMAT ", %" GST_TIME_FORMAT "], rate: %f",
-        GST_TIME_ARGS(segment->start), GST_TIME_ARGS(segment->stop), segment->rate);
+    GST_DEBUG_OBJECT(appsrc, "Sending new segment event");
 
-    if (!gst_base_src_new_seamless_segment(GST_BASE_SRC(appsrc), segment->start, segment->stop, segment->start))
+    if (!gst_base_src_new_seamless_segment(GST_BASE_SRC(appsrc), segment->start, segment->stop, segment->time))
         GST_WARNING("Failed to configure seamless segment event for trackId=%s", trackId.string().utf8().data());
 
     if (!gst_element_send_event(GST_ELEMENT(appsrc), gst_event_new_flush_stop(false)))
