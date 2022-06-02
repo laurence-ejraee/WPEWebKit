@@ -169,6 +169,8 @@ static void enabledAppsrcEnoughData(GstAppSrc *appsrc, gpointer userData)
 
     WebKitMediaSrc* webKitMediaSrc = static_cast<WebKitMediaSrc*>(userData);
     ASSERT(WEBKIT_IS_MEDIA_SRC(webKitMediaSrc));
+    GST_OBJECT_LOCK(webKitMediaSrc);
+
     Stream* stream = getStreamByAppsrc(webKitMediaSrc, GST_ELEMENT(appsrc));
 
     // This callback might have been scheduled from a child thread before the stream was removed.
@@ -180,6 +182,8 @@ static void enabledAppsrcEnoughData(GstAppSrc *appsrc, gpointer userData)
     auto notificationType = streamTypeToNotificationType(stream->type);
     webKitMediaSrc->priv->notifier->cancelPendingNotifications(notificationType);
     stream->sourceBuffer->setReadyForMoreSamples(false);
+
+    GST_OBJECT_UNLOCK(webKitMediaSrc);
 }
 
 static gboolean enabledAppsrcSeekData(GstAppSrc*, guint64, gpointer userData)
