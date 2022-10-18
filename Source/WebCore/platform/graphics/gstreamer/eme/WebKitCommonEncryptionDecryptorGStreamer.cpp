@@ -51,6 +51,12 @@ private:
     WebKitMediaCommonEncryptionDecrypt* m_decryptor;
 };
 
+enum DecryptionState {
+    Idle,
+    Decrypting,
+    FlushPending
+};
+
 #define WEBKIT_MEDIA_CENC_DECRYPT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), WEBKIT_TYPE_MEDIA_CENC_DECRYPT, WebKitMediaCommonEncryptionDecryptPrivate))
 struct _WebKitMediaCommonEncryptionDecryptPrivate {
     RefPtr<CDMProxy> cdmProxy;
@@ -61,6 +67,7 @@ struct _WebKitMediaCommonEncryptionDecryptPrivate {
 
     bool isFlushing { false };
     std::unique_ptr<CDMProxyDecryptionClientImplementation> cdmProxyDecryptionClientImplementation;
+    enum DecryptionState decryptionState { DecryptionState::Idle };
 };
 
 static constexpr Seconds MaxSecondsToWaitForCDMProxy = 5_s;
@@ -247,8 +254,10 @@ static GstFlowReturn transformInPlace(GstBaseTransform* base, GstBuffer* buffer)
         GST_DEBUG_OBJECT(self, "CDM now available with address %p", priv->cdmProxy.get());
     }
 
-    auto removeProtectionMetaOnReturn = makeScopeExit([buffer, protectionMeta] {
+    // We are still going to be locked when running this, so no need to lock here.
+    auto scopeExit = makeScopeExit([buffer, protectionMeta, priv] {
         gst_buffer_remove_meta(buffer, reinterpret_cast<GstMeta*>(protectionMeta));
+        priv->decryptionState = DecryptionState::Idle;
     });
 
     bool isCbcs = !g_strcmp0(gst_structure_get_string(protectionMeta->info, "cipher-mode"), "cbcs");
@@ -321,6 +330,10 @@ static GstFlowReturn transformInPlace(GstBaseTransform* base, GstBuffer* buffer)
     GstBuffer* ivBuffer = gst_value_get_buffer(value);
     WebKitMediaCommonEncryptionDecryptClass* klass = WEBKIT_MEDIA_CENC_DECRYPT_GET_CLASS(self);
 
+    ASSERT(priv->decryptionState == DecryptionState::Idle);
+    // Value is set back to Idle in the scopeExit.
+    priv->decryptionState = DecryptionState::Decrypting;
+
     GST_TRACE_OBJECT(self, "decrypting");
 
     // Temporarily release the lock while we don't need to access priv. The lower level API is used
@@ -332,11 +345,12 @@ static GstFlowReturn transformInPlace(GstBaseTransform* base, GstBuffer* buffer)
     // Accessing priv members again.
     priv->mutex.lock();
 
+    if (priv->isFlushing || priv->decryptionState == DecryptionState::FlushPending) {
+        GST_DEBUG_OBJECT(self, "flushing, bailing out");
+        return GST_FLOW_FLUSHING;
+    }
+
     if (!didDecryptionSucceed) {
-        if (priv->isFlushing) {
-            GST_DEBUG_OBJECT(self, "Decryption aborted because of flush");
-            return GST_FLOW_FLUSHING;
-        }
         GST_ELEMENT_ERROR(self, STREAM, DECRYPT, ("Decryption failed"), (nullptr));
         return GST_FLOW_NOT_SUPPORTED;
     }
@@ -431,6 +445,9 @@ static gboolean sinkEventHandler(GstBaseTransform* trans, GstEvent* event)
             LockHolder locker(priv->mutex);
             bool isCdmProxyAttached = priv->cdmProxy;
             priv->isFlushing = true;
+            ASSERT(priv->decryptionState == DecryptionState::Idle || priv->decryptionState == DecryptionState::Decrypting);
+            if (priv->decryptionState == DecryptionState::Decrypting)
+                priv->decryptionState = DecryptionState::FlushPending;
             if (isCdmProxyAttached) {
                 locker.unlockEarly();
                 priv->cdmProxy->abortWaitingForKey();
