@@ -189,6 +189,7 @@ private:
     void didDropSample();
     void evictCodedFrames(size_t newDataSize);
     size_t maximumBufferSize() const;
+    MediaTime findPreviousSyncSamplePresentationTime(const MediaTime&);
 
     void monitorBufferingRate();
 
