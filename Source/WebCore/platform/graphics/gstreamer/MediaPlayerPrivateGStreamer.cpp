@@ -1003,6 +1003,8 @@ bool MediaPlayerPrivateGStreamer::changePipelineState(GstState newState)
     if (currentState != pausedOrPlaying && setStateResult == GST_STATE_CHANGE_FAILURE)
         return false;
 
+    setSwitchToPlayingOngoing(newState == GST_STATE_PLAYING);
+
     // Create a timer when entering the READY state so that we can free resources if we stay for too long on READY.
     // Also lets remove the timer if we request a state change for any state other than READY. See also https://bugs.webkit.org/show_bug.cgi?id=117354
     if (newState == GST_STATE_READY && !m_readyTimerHandler.isActive()) {
@@ -2491,6 +2493,7 @@ void MediaPlayerPrivateGStreamer::updateStates()
         case GST_STATE_PAUSED:
             FALLTHROUGH;
         case GST_STATE_PLAYING:
+            setSwitchToPlayingOngoing(false);
             if (m_isBuffering) {
                 GRefPtr<GstQuery> query = adoptGRef(gst_query_new_buffering(GST_FORMAT_PERCENT));
 
@@ -2540,6 +2543,7 @@ void MediaPlayerPrivateGStreamer::updateStates()
                 changePipelineState(GST_STATE_PLAYING);
             }
         } else if (m_currentState == GST_STATE_PLAYING) {
+            setSwitchToPlayingOngoing(false);
             m_isPaused = false;
 
             shouldPauseForBuffering = (m_isBuffering && !m_isLiveStream.value_or(false));
@@ -2588,8 +2592,10 @@ void MediaPlayerPrivateGStreamer::updateStates()
         else if (m_currentState == GST_STATE_PAUSED) {
             m_readyState = MediaPlayer::ReadyState::HaveEnoughData;
             m_isPaused = true;
-        } else if (m_currentState == GST_STATE_PLAYING)
+        } else if (m_currentState == GST_STATE_PLAYING) {
+            setSwitchToPlayingOngoing(false);
             m_isPaused = false;
+        }
 
         if (!m_isPaused && m_playbackRate)
             changePipelineState(GST_STATE_PLAYING);

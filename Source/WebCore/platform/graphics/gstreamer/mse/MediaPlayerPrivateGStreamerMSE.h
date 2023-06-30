@@ -72,6 +72,7 @@ public:
     // see: https://w3c.github.io/media-source/#h-note-19
     bool supportsProgressMonitoring() const override { return false; }
 
+    void setSwitchToPlayingOngoing(bool value) final;
     void setReadyState(MediaPlayer::ReadyState);
     void waitForSeekCompleted();
     void seekCompleted();
@@ -103,6 +104,7 @@ private:
 
     bool doSeek(const MediaTime&, float, GstSeekFlags) override;
     void maybeFinishSeek();
+    bool checkShouldDelaySeek(GstStateChangeReturn, GstState currentState, GstState newState, const MediaTime& position);
 
     void asyncStateChangeDone() override;
 
@@ -120,6 +122,7 @@ private:
     bool m_mseSeekCompleted = true;
     bool m_areDurationChangesBlocked = false;
     bool m_shouldReportDurationWhenUnblocking = false;
+    bool m_isSwitchToPlayingOngoing = false;
     RefPtr<PlaybackPipeline> m_playbackPipeline;
 };
 

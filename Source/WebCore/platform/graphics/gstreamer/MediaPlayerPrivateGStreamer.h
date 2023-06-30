@@ -274,6 +274,7 @@ protected:
     virtual void updatePlaybackRate();
 
     void finishSeek();
+    virtual void setSwitchToPlayingOngoing(bool) { }
 
 #if USE(GSTREAMER_HOLEPUNCH)
     GstElement* createHolePunchVideoSink();

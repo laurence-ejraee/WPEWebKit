@@ -250,7 +250,7 @@ void MediaPlayerPrivateGStreamerMSE::notifySeekNeedsDataForTime(const MediaTime&
     }
 }
 
-static bool checkShouldDelaySeek(GstStateChangeReturn getStateResult, GstState currentState, GstState newState)
+bool MediaPlayerPrivateGStreamerMSE::checkShouldDelaySeek(GstStateChangeReturn getStateResult, GstState currentState, GstState newState, const MediaTime& position)
 {
     if (getStateResult != GST_STATE_CHANGE_ASYNC)
         return false;
@@ -260,7 +260,15 @@ static bool checkShouldDelaySeek(GstStateChangeReturn getStateResult, GstState c
         return false;
     if (GST_STATE_TRANSITION(currentState, newState) == GST_STATE_CHANGE_PAUSED_TO_PAUSED)
         return false;
+    if (GST_STATE_TRANSITION(currentState, newState) == GST_STATE_CHANGE_PAUSED_TO_PLAYING && m_isSwitchToPlayingOngoing && isTimeBuffered(position))
+        return false;
     return true;
+}
+
+void MediaPlayerPrivateGStreamerMSE::setSwitchToPlayingOngoing(bool value)
+{
+    m_isSwitchToPlayingOngoing = value;
+    GST_TRACE_OBJECT(pipeline(), "set switch to playing ongoing %s", boolForPrinting(m_isSwitchToPlayingOngoing));
 }
 
 bool MediaPlayerPrivateGStreamerMSE::doSeek(const MediaTime& position, float rate, GstSeekFlags seekType)
@@ -282,7 +290,7 @@ bool MediaPlayerPrivateGStreamerMSE::doSeek(const MediaTime& position, float rat
         return false;
     }
 
-    bool shouldDelaySeek = checkShouldDelaySeek(getStateResult, state, newState);
+    bool shouldDelaySeek = checkShouldDelaySeek(getStateResult, state, newState, seekTime);
     if (shouldDelaySeek || m_isEndReached || !m_gstSeekCompleted) {
         CString reason = "Unknown reason";
         if (shouldDelaySeek) {
