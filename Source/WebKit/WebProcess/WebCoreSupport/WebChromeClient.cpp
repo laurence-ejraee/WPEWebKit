@@ -1725,4 +1725,9 @@ bool WebChromeClient::isInStableState() const
 #endif
 }
 
+uint64_t WebChromeClient::nativeWindowID() const
+{
+    return m_page.drawingArea()->nativeWindowID();
+}
+
 } // namespace WebKit

@@ -179,6 +179,8 @@ public:
     
     static RetainPtr<CABasicAnimation> transientZoomSnapAnimationForKeyPath(ASCIILiteral);
 
+    virtual uint64_t nativeWindowID() const = 0;
+
 protected:
     DrawingArea(DrawingAreaType, DrawingAreaIdentifier, WebPage&);
 
