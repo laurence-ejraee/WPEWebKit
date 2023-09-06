@@ -139,6 +139,16 @@ void NetworkDataTaskSoup::createRequest(ResourceRequest&& request)
         soup_message_disable_feature(m_soupMessage.get(), SOUP_TYPE_AUTH_MANAGER);
 #endif
     }
+
+// App indicate it's OK to use existing connection when sending a POST
+#if USE(SOUP2) // Flagging as I have only tested for soup2
+    const char* enablePostReuse = getenv("WEBKIT_POST_CONNECTION_REUSE");
+    if( enablePostReuse && enablePostReuse[0] != '0' ) {
+        if (m_soupMessage->method == SOUP_METHOD_POST)
+            messageFlags |= SOUP_MESSAGE_IDEMPOTENT;
+    }
+#endif
+
     soup_message_set_flags(m_soupMessage.get(), static_cast<SoupMessageFlags>(soup_message_get_flags(m_soupMessage.get()) | messageFlags));
 
 #if SOUP_CHECK_VERSION(2, 67, 1)
