@@ -3664,7 +3664,7 @@ void HTMLMediaElement::pauseInternal()
 
     if (!m_paused) {
         m_paused = true;
-        scheduleTimeupdateEvent(false);
+        scheduleTimeupdateEvent(false, true);
         scheduleEvent(eventNames().pauseEvent);
         scheduleRejectPendingPlayPromises(DOMException::create(AbortError));
         if (MemoryPressureHandler::singleton().isUnderMemoryPressure())
@@ -3971,7 +3971,7 @@ void HTMLMediaElement::playbackProgressTimerFired()
     }
 }
 
-void HTMLMediaElement::scheduleTimeupdateEvent(bool periodicEvent)
+void HTMLMediaElement::scheduleTimeupdateEvent(bool periodicEvent, bool force)
 {
     MonotonicTime now = MonotonicTime::now();
     Seconds timedelta = now - m_clockTimeAtLastUpdateEvent;
@@ -3982,8 +3982,9 @@ void HTMLMediaElement::scheduleTimeupdateEvent(bool periodicEvent)
 
     // Some media engines make multiple "time changed" callbacks at the same time, but we only want one
     // event at a given time so filter here
+    // laurence.ejraee: Unless forced to follow spec (in pause case)
     MediaTime movieTime = currentMediaTime();
-    if (movieTime != m_lastTimeUpdateEventMovieTime) {
+    if (movieTime != m_lastTimeUpdateEventMovieTime || force) {
         scheduleEvent(eventNames().timeupdateEvent);
         m_clockTimeAtLastUpdateEvent = now;
         m_lastTimeUpdateEventMovieTime = movieTime;

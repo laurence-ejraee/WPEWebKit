@@ -778,7 +778,7 @@ private:
     void clearSeeking();
     void addPlayedRange(const MediaTime& start, const MediaTime& end);
     
-    void scheduleTimeupdateEvent(bool periodicEvent);
+    void scheduleTimeupdateEvent(bool periodicEvent, bool force = false);
     virtual void scheduleResizeEvent() { }
     virtual void scheduleResizeEventIfSizeChanged() { }
 
