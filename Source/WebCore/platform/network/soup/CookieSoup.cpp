@@ -70,9 +70,9 @@ Cookie::Cookie(SoupCookie* cookie)
     , domain(String::fromUTF8(soup_cookie_get_domain(cookie)))
     , path(String::fromUTF8(soup_cookie_get_path(cookie)))
 #if USE(SOUP2)
-    , expires(soup_cookie_get_expires(cookie) ? static_cast<double>(soup_date_to_time_t(soup_cookie_get_expires(cookie))) * 1000 : 0)
+    , expires(soup_cookie_get_expires(cookie) ? makeOptional(static_cast<double>(soup_date_to_time_t(soup_cookie_get_expires(cookie))) * 1000) : WTF::nullopt)
 #else
-    , expires(soup_cookie_get_expires(cookie) ? static_cast<double>(g_date_time_to_unix(soup_cookie_get_expires(cookie))) * 1000 : 0)
+    , expires(soup_cookie_get_expires(cookie) ? makeOptional(static_cast<double>(g_date_time_to_unix(soup_cookie_get_expires(cookie))) * 1000) : WTF::nullopt)
 #endif
     , httpOnly(soup_cookie_get_http_only(cookie))
     , secure(soup_cookie_get_secure(cookie))
@@ -111,13 +111,13 @@ SoupCookie* Cookie::toSoupCookie() const
     soup_cookie_set_same_site_policy(soupCookie, soupSameSitePolicy(sameSite));
 #endif
 
-    if (!session) {
+    if (!session && expires) {
 #if USE(SOUP2)
-        SoupDate* date = msToSoupDate(expires);
+        SoupDate* date = msToSoupDate(*expires);
         soup_cookie_set_expires(soupCookie, date);
         soup_date_free(date);
 #else
-        GRefPtr<GDateTime> date = adoptGRef(g_date_time_new_from_unix_utc(expires / 1000.));
+        GRefPtr<GDateTime> date = adoptGRef(g_date_time_new_from_unix_utc((*expires) / 1000.));
         soup_cookie_set_expires(soupCookie, date.get());
 #endif
     }
