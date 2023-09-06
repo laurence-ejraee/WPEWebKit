@@ -123,8 +123,17 @@ SoupNetworkSession::SoupNetworkSession(PAL::SessionID sessionID)
     // the rule "Do What Every Other Modern Browser Is Doing". They seem
     // to significantly improve page loading time compared to soup's
     // default values.
-    static const int maxConnections = 17;
-    static const int maxConnectionsPerHost = 6;
+	/* This has been updated to reflect  new usage scenarios.
+	 * YouTube works as a single page web app and hence loads
+	 * a whole lot of JS content in parallel from multiple hosts.
+	 * The maxConnections and maxConnectionsPerHost will allow
+	 * an additional number of connections to large web apps.
+	 * Technically, the connections not getting "released" is what causes
+	 * the delay in loading of other resources. This cannot be corrected
+	 * since that could induce load timeouts.
+	 */
+    static const int maxConnections = 150;
+    static const int maxConnectionsPerHost = 150;
 
     m_soupSession = adoptGRef(soup_session_new_with_options(
         "max-conns", maxConnections,
