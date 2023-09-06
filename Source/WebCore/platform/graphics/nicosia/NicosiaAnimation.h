@@ -50,7 +50,6 @@ public:
     Animation& operator=(Animation&&) = default;
 
     void apply(ApplicationResult&, MonotonicTime);
-    void applyKeepingInternalState(ApplicationResult&, MonotonicTime);
     void pause(Seconds);
     void resume();
 
@@ -91,7 +90,6 @@ public:
     void resume();
 
     void apply(Animation::ApplicationResult&, MonotonicTime);
-    void applyKeepingInternalState(Animation::ApplicationResult&, MonotonicTime);
 
     bool isEmpty() const { return m_animations.isEmpty(); }
     size_t size() const { return m_animations.size(); }

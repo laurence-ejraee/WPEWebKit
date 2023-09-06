@@ -27,10 +27,6 @@
 #include "TextureMapperBackingStore.h"
 #include <wtf/WeakPtr.h>
 
-#if USE(COORDINATED_GRAPHICS)
-#include "NicosiaAnimatedBackingStoreClient.h"
-#endif
-
 namespace WebCore {
 
 class GraphicsLayer;
@@ -93,9 +89,6 @@ public:
     void setContentsLayer(TextureMapperPlatformLayer*);
     void setAnimations(const Nicosia::Animations&);
     void setBackingStore(TextureMapperBackingStore*);
-#if USE(COORDINATED_GRAPHICS)
-    void setAnimatedBackingStoreClient(Nicosia::AnimatedBackingStoreClient*);
-#endif
 
     bool applyAnimationsRecursively(MonotonicTime);
     bool syncAnimations(MonotonicTime);
@@ -209,19 +202,11 @@ public:
     TextureMapper* m_textureMapper { nullptr };
     Nicosia::Animations m_animations;
     uint32_t m_id { 0 };
-#if USE(COORDINATED_GRAPHICS)
-    RefPtr<Nicosia::AnimatedBackingStoreClient> m_animatedBackingStoreClient;
-#endif
 
     struct {
         TransformationMatrix localTransform;
         TransformationMatrix combined;
         TransformationMatrix combinedForChildren;
-#if USE(COORDINATED_GRAPHICS)
-        TransformationMatrix futureLocalTransform;
-        TransformationMatrix futureCombined;
-        TransformationMatrix futureCombinedForChildren;
-#endif
     } m_layerTransforms;
 };
 

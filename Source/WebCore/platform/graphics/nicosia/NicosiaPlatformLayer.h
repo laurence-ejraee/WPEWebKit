@@ -34,7 +34,6 @@
 #include "FloatPoint3D.h"
 #include "FloatRect.h"
 #include "FloatSize.h"
-#include "NicosiaAnimatedBackingStoreClient.h"
 #include "NicosiaAnimation.h"
 #include "NicosiaSceneIntegration.h"
 #include "TransformationMatrix.h"
@@ -128,7 +127,6 @@ public:
                     bool contentLayerChanged : 1;
                     bool backingStoreChanged : 1;
                     bool imageBackingChanged : 1;
-                    bool animatedBackingStoreClientChanged : 1;
                     bool repaintCounterChanged : 1;
                     bool debugBorderChanged : 1;
                 };
@@ -182,7 +180,6 @@ public:
         RefPtr<ContentLayer> contentLayer;
         RefPtr<BackingStore> backingStore;
         RefPtr<ImageBacking> imageBacking;
-        RefPtr<AnimatedBackingStoreClient> animatedBackingStoreClient;
 
         struct RepaintCounter {
             unsigned count { 0 };
@@ -263,8 +260,6 @@ public:
             staging.contentLayer = pending.contentLayer;
         if (pending.delta.imageBackingChanged)
             staging.imageBacking = pending.imageBacking;
-        if (pending.delta.animatedBackingStoreClientChanged)
-            staging.animatedBackingStoreClient = pending.animatedBackingStoreClient;
 
         pending.delta = { };
 

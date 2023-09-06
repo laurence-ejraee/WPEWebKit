@@ -353,11 +353,6 @@ void CoordinatedGraphicsScene::updateSceneState()
                                 { std::ref(layer), std::ref(impl), impl.takeUpdate() });
                         } else
                             layer.setContentsLayer(nullptr);
-
-                        if (layerState.animatedBackingStoreClient)
-                            layer.setAnimatedBackingStoreClient(layerState.animatedBackingStoreClient.get());
-                        else
-                            layer.setAnimatedBackingStoreClient(nullptr);
                     });
             }
 

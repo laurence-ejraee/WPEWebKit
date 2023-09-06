@@ -268,19 +268,6 @@ void Animation::apply(ApplicationResult& applicationResults, MonotonicTime time)
     }
 }
 
-void Animation::applyKeepingInternalState(ApplicationResult& applicationResults, MonotonicTime time)
-{
-    MonotonicTime oldLastRefreshedTime = m_lastRefreshedTime;
-    Seconds oldTotalRunningTime = m_totalRunningTime;
-    AnimationState oldState = m_state;
-
-    apply(applicationResults, time);
-
-    m_lastRefreshedTime = oldLastRefreshedTime;
-    m_totalRunningTime = oldTotalRunningTime;
-    m_state = oldState;
-}
-
 void Animation::pause(Seconds time)
 {
     m_state = AnimationState::Paused;
@@ -373,12 +360,6 @@ void Animations::apply(Animation::ApplicationResult& applicationResults, Monoton
 {
     for (auto& animation : m_animations)
         animation.apply(applicationResults, time);
-}
-
-void Animations::applyKeepingInternalState(Animation::ApplicationResult& applicationResults, MonotonicTime time)
-{
-    for (auto& animation : m_animations)
-        animation.applyKeepingInternalState(applicationResults, time);
 }
 
 bool Animations::hasActiveAnimationsOfType(AnimatedPropertyID type) const
