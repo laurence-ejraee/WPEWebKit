@@ -62,7 +62,7 @@ static size_t s_pollMaximumProcessGPUMemoryNonCriticalLimit = 0;
 
 static const char* s_processStatus = "/proc/self/status";
 static const char* s_cmdline = "/proc/self/cmdline";
-static char* s_GPUMemoryUsedFile = nullptr;
+static const char* s_GPUMemoryUsedFile = "/proc/brcm/core";
 
 static inline String nextToken(FILE* file)
 {
@@ -111,6 +111,77 @@ bool readToken(const char* filename, const char* key, size_t fileUnits, size_t &
 
     fclose(file);
     return validValue;
+}
+
+// Parse GPU memory value from broadcom file
+bool parse_proc_brcm_core(const char* columnHeader, size_t &result)
+{
+    FILE* file = fopen(s_GPUMemoryUsedFile, "r");
+    if (!file)
+        return false;
+    
+    unsigned int index = 0; // Current token
+    unsigned int columnI = 0; // Index of column header
+    unsigned int nameI = 0; // Index of name column
+    unsigned int gfxI = 0; // Index of GFX token
+
+    bool validValue = false;
+    String token;
+    Vector<String> tokens;
+    do {
+        token = nextToken(file);
+        tokens.append(token);
+        if (token.isEmpty())
+            break;
+        
+        if (!columnHeader)
+            break;
+        
+        if(token == "name")
+            nameI = index;
+
+        if (token == columnHeader)
+            columnI = index;
+
+        if (token.contains("GFX")) {
+            gfxI = index;
+            break;
+        }
+        index++; // Next token
+    } while (!token.isEmpty());
+
+    // Column headers or GFX data not found
+    if(!columnI || !gfxI || !nameI)
+        return false;
+    
+    int valI = gfxI - (nameI - columnI); // Index of the mem value for said column
+    result = tokens.at(valI).toUInt64(&validValue);
+
+    fclose(file);
+    return validValue;
+}
+
+// Total GPU mem in bytes from /proc/brcm/core
+size_t GetTotalGpuRam()
+{
+    size_t value = 0;
+    if(parse_proc_brcm_core("MB", value))
+    {
+        value *= 1024 * 1024; // Convert MB to bytes
+    }
+    return value;
+}
+
+// Used GPU mem in bytes from /proc/brcm/core percentage
+size_t GetUsedGpuRam()
+{
+    size_t value = 0;
+    if(parse_proc_brcm_core("used", value))
+    {
+        size_t total = GetTotalGpuRam();
+        value = value * 0.01 * total; // Convert percent for used mem
+    }
+    return value;
 }
 
 static String getProcessName()
@@ -172,7 +243,7 @@ static bool initializeProcessMemoryLimits(size_t &criticalLimit, size_t &nonCrit
     return false;
 }
 
-static bool initializeProcessGPUMemoryLimits(size_t &criticalLimit, size_t &nonCriticalLimit, char **usedFilename)
+static bool initializeProcessGPUMemoryLimits(size_t &criticalLimit, size_t &nonCriticalLimit)
 {
     static bool initialized = false;
     static bool success = false;
@@ -189,8 +260,8 @@ static bool initializeProcessGPUMemoryLimits(size_t &criticalLimit, size_t &nonC
     if (fnmatch("*WPEWebProcess", getProcessName().utf8().data(), 0))
         return false;
 
-    // Ensure that both the limit and the file containig the used value are defined.
-    if (!getenv("WPE_POLL_MAX_MEMORY_GPU") || !getenv("WPE_POLL_MAX_MEMORY_GPU_FILE"))
+    // Ensure that the limit is defined.
+    if (!getenv("WPE_POLL_MAX_MEMORY_GPU"))
         return false;
 
     String s(getenv("WPE_POLL_MAX_MEMORY_GPU"));
@@ -211,7 +282,6 @@ static bool initializeProcessGPUMemoryLimits(size_t &criticalLimit, size_t &nonC
 
     criticalLimit = size * units;
     nonCriticalLimit = criticalLimit * 0.95;
-    *usedFilename = getenv("WPE_POLL_MAX_MEMORY_GPU_FILE");
 
     success = true;
     return true;
@@ -247,6 +317,7 @@ MemoryPressureHandler::MemoryUsagePoller::MemoryUsagePoller()
             bool underMemoryPressure = false;
             bool critical = false;
             bool synchronous = false;
+            bool gpuCritical = false;
             size_t value = 0;
             size_t value_swap = 0;
 
@@ -256,15 +327,18 @@ MemoryPressureHandler::MemoryUsagePoller::MemoryUsagePoller()
                         underMemoryPressure = true;
                         critical = value + value_swap > s_pollMaximumProcessMemoryCriticalLimit;
                         synchronous = value + value_swap > s_pollMaximumProcessMemoryCriticalLimit * 1.05;
+                        WTFLogAlways("MemoryPressureHandler: PROCESS Memory under pressure! %s", critical ? "critical" : "non-critical");
                     }
                 }
             }
 
             if (s_pollMaximumProcessGPUMemoryCriticalLimit) {
-                if (readToken(s_GPUMemoryUsedFile, nullptr, 1, value)) {
+                size_t value = GetUsedGpuRam();
+                if (value) {
                     if (value > s_pollMaximumProcessGPUMemoryNonCriticalLimit) {
-                        underMemoryPressure = true;
-                        critical = value > s_pollMaximumProcessGPUMemoryCriticalLimit;
+                        //underMemoryPressure = true;
+                        gpuCritical = value > s_pollMaximumProcessGPUMemoryCriticalLimit;
+                        WTFLogAlways("MemoryPressureHandler: GPU Memory under pressure! (%s)", gpuCritical ? "critical" : "non-critical");
                     }
                 }
             }
@@ -321,7 +395,7 @@ void MemoryPressureHandler::install()
 
     // If the per process limits are not defined, we don't create the memory poller.
     if (initializeProcessMemoryLimits(s_pollMaximumProcessMemoryCriticalLimit, s_pollMaximumProcessMemoryNonCriticalLimit) |
-        initializeProcessGPUMemoryLimits(s_pollMaximumProcessGPUMemoryCriticalLimit, s_pollMaximumProcessGPUMemoryNonCriticalLimit, &s_GPUMemoryUsedFile))
+        initializeProcessGPUMemoryLimits(s_pollMaximumProcessGPUMemoryCriticalLimit, s_pollMaximumProcessGPUMemoryNonCriticalLimit))
         m_memoryUsagePoller = std::make_unique<MemoryUsagePoller>();
 
     m_installed = true;
