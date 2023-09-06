@@ -138,7 +138,7 @@ SoupNetworkSession::SoupNetworkSession(PAL::SessionID sessionID)
     m_soupSession = adoptGRef(soup_session_new_with_options(
         "max-conns", maxConnections,
         "max-conns-per-host", maxConnectionsPerHost,
-        "timeout", 0,
+        "timeout", 60,
         nullptr));
 
     soup_session_add_feature_by_type(m_soupSession.get(), SOUP_TYPE_CONTENT_SNIFFER);
