@@ -3041,6 +3041,18 @@ PlatformLayer* MediaPlayerPrivateGStreamer::platformLayer() const
 #endif
 }
 
+void MediaPlayerPrivateGStreamer::setShouldMaintainAspectRatio(bool maintainAspect)
+{
+    auto videoSinkPtr = m_videoSink.get();
+    if (videoSinkPtr != nullptr) {
+        g_object_set(G_OBJECT(videoSinkPtr), "zoom-mode", maintainAspect, nullptr);
+        m_shouldMaintainAspectRatio = maintainAspect;
+    }
+    else {
+        GST_ERROR("%s - no videoSink created yet", __FUNCTION__);
+    }
+}
+
 #if USE(NICOSIA)
 void MediaPlayerPrivateGStreamer::swapBuffersIfNeeded()
 {
