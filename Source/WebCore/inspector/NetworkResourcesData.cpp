@@ -41,8 +41,12 @@ namespace WebCore {
 
 using namespace Inspector;
 
-static const size_t maximumResourcesContentSize = 200 * 1000 * 1000; // 200MB
-static const size_t maximumSingleResourceContentSize = 50 * 1000 * 1000; // 50MB
+// Use wpe-2.22 values:
+static const size_t maximumResourcesContentSize = 100 * 1000 * 1000; // 100MB
+static const size_t maximumSingleResourceContentSize = 10 * 1000 * 1000; // 10MB
+
+// static const size_t maximumResourcesContentSize = 200 * 1000 * 1000; // 200MB
+// static const size_t maximumSingleResourceContentSize = 50 * 1000 * 1000; // 50MB
 
 NetworkResourcesData::ResourceData::ResourceData(const String& requestId, const String& loaderId)
     : m_requestId(requestId)
@@ -187,9 +191,6 @@ InspectorPageAgent::ResourceType NetworkResourcesData::resourceType(const String
 
 void NetworkResourcesData::setResourceContent(const String& requestId, const String& content, bool base64Encoded)
 {
-    if (content.isNull())
-        return;
-
     ResourceData* resourceData = resourceDataForRequestId(requestId);
     if (!resourceData)
         return;

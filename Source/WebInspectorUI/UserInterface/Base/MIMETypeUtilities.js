@@ -326,13 +326,6 @@ WI.shouldTreatMIMETypeAsText = function(mimeType)
         return true;
 
     // Various script and JSON mime types.
-    if (extension === "js" || extension === "json")
-        return true;
-
-    // Various media text mime types.
-    if (extension === "m3u8" || extension === "m3u")
-        return true;
-
     if (mimeType.startsWith("application/"))
         return mimeType.endsWith("script") || mimeType.endsWith("json") || mimeType.endsWith("xml");
 
