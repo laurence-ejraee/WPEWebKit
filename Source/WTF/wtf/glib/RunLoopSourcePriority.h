@@ -85,26 +85,26 @@ enum RunLoopSourcePriority {
 #elif PLATFORM(WPE)
 
 enum RunLoopSourcePriority {
-    RunLoopDispatcher = 0,
-    RunLoopTimer = 0,
+    RunLoopDispatcher = -70,
+    RunLoopTimer = -70,
 
-    MainThreadDispatcherTimer = 10,
+    MainThreadDispatcherTimer = -60,
 
-    MemoryPressureHandlerTimer = -10,
+    MemoryPressureHandlerTimer = -80,
 
-    JavascriptTimer = 10,
-    MainThreadSharedTimer = 10,
+    JavascriptTimer = -60,
+    MainThreadSharedTimer = -60,
 
-    LayerFlushTimer = 0,
-    DisplayRefreshMonitorTimer = 0,
+    LayerFlushTimer = -70,
+    DisplayRefreshMonitorTimer = -70,
 
-    CompositingThreadUpdateTimer = 0,
+    CompositingThreadUpdateTimer = -70,
 
-    ReleaseUnusedResourcesTimer = 0,
+    ReleaseUnusedResourcesTimer = -70,
 
-    AsyncIONetwork = 10,
-    DiskCacheRead = 10,
-    DiskCacheWrite = 20
+    AsyncIONetwork = -60,
+    DiskCacheRead = -60,
+    DiskCacheWrite = -50
 };
 
 #endif
