@@ -352,11 +352,16 @@ WI.SettingsTabContentView = class SettingsTabContentView extends WI.TabContentVi
 
     _createExperimentalSettingsView()
     {
+        let canShowPreviewFeatures = WI.canShowPreviewFeatures();
+        let hasCSSDomain = InspectorBackend.hasDomain("CSS");
+        if (!canShowPreviewFeatures && !hasCSSDomain)
+            return;
+
         let experimentalSettingsView = new WI.SettingsView("experimental", WI.UIString("Experimental"));
 
         let initialValues = new Map;
 
-        if (WI.canShowPreviewFeatures()) {
+        if (canShowPreviewFeatures) {
             experimentalSettingsView.addSetting(WI.UIString("Staging:"), WI.settings.experimentalEnablePreviewFeatures, WI.UIString("Enable Preview Features"));
             experimentalSettingsView.addSeparator();
         }
@@ -364,9 +369,11 @@ WI.SettingsTabContentView = class SettingsTabContentView extends WI.TabContentVi
         experimentalSettingsView.addSetting(WI.UIString("User Interface:"), WI.settings.experimentalEnableNewTabBar, WI.UIString("Enable New Tab Bar"));
         experimentalSettingsView.addSeparator();
 
-        if (InspectorBackend.hasDomain("CSS")) {
+        if (hasCSSDomain) {
             let stylesGroup = experimentalSettingsView.addGroup(WI.UIString("Styles:"));
-            stylesGroup.addSetting(WI.settings.experimentalEnableStylesJumpToEffective, WI.UIString("Show Jump to Effective Property Button"));
+            stylesGroup.addSetting(WI.settings.experimentalEnableStylesJumpToEffective, WI.UIString("Show jump to effective property button"));
+            stylesGroup.addSetting(WI.settings.experimentalEnableStyelsJumpToVariableDeclaration, WI.UIString("Show jump to variable declaration button"));
+
             experimentalSettingsView.addSeparator();
         }
 
@@ -389,8 +396,10 @@ WI.SettingsTabContentView = class SettingsTabContentView extends WI.TabContentVi
         listenForChange(WI.settings.experimentalEnablePreviewFeatures);
         listenForChange(WI.settings.experimentalEnableNewTabBar);
 
-        if (InspectorBackend.hasDomain("CSS"))
+        if (hasCSSDomain) {
             listenForChange(WI.settings.experimentalEnableStylesJumpToEffective);
+            listenForChange(WI.settings.experimentalEnableStyelsJumpToVariableDeclaration);
+        }
 
         this._createReferenceLink(experimentalSettingsView);
 
