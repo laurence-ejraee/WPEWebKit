@@ -121,7 +121,7 @@ WI.ResourceTreeElement = class ResourceTreeElement extends WI.SourceCodeTreeElem
         if (this._resource.type === WI.Resource.Type.WebSocket)
             return;
 
-        InspectorFrontendHost.openInNewTab(this._resource.url);
+        InspectorFrontendHost.openURLExternally(this._resource.url);
     }
 
     // Protected (Used by FrameTreeElement)

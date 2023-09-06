@@ -297,7 +297,7 @@ ${topLevelItems.join("\n")}
     document.body.appendChild(sheetElement);
 
     document.getElementById("uncaught-exception-bug-report-link").addEventListener("click", (event) => {
-        InspectorFrontendHost.openInNewTab(prefilledBugReportLink);
+        InspectorFrontendHost.openURLExternally(prefilledBugReportLink);
         event.stopImmediatePropagation();
         event.preventDefault();
     });

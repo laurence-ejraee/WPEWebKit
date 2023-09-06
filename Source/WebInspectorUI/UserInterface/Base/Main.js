@@ -919,7 +919,7 @@ WI.openURL = function(url, frame, options = {})
         options.alwaysOpenExternally = window.event ? window.event.metaKey : false;
 
     if (options.alwaysOpenExternally) {
-        InspectorFrontendHost.openInNewTab(url);
+        InspectorFrontendHost.openURLExternally(url);
         return;
     }
 
@@ -946,7 +946,7 @@ WI.openURL = function(url, frame, options = {})
         return;
     }
 
-    InspectorFrontendHost.openInNewTab(url);
+    InspectorFrontendHost.openURLExternally(url);
 };
 
 WI.close = function()
