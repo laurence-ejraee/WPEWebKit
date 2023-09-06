@@ -1402,16 +1402,24 @@ WI._searchTextDidChange = function(event)
 
 WI._focusSearchField = function(event)
 {
-    if (WI.settings.experimentalEnableNewTabBar.value)
-        WI.tabBrowser.showTabForContentView(WI._searchTabContentView);
+    let searchQuery = "";
 
-    if (WI.tabBrowser.selectedTabContentView instanceof WI.SearchTabContentView) {
-        WI.tabBrowser.selectedTabContentView.focusSearchField();
-        return;
+    if (WI.settings.searchFromSelection.value) {
+        let selection = window.getSelection();
+        if (selection.type === "Range" || !selection.isCollapsed)
+            searchQuery = selection.toString().removeWordBreakCharacters();
     }
+
+    WI.tabBrowser.showTabForContentView(WI._searchTabContentView, {
+        // Classify this as a keyboard shortcut, as the only other way to get to Search Tab is via TabBar itself.
+        initiatorHint: WI.TabBrowser.TabNavigationInitiator.KeyboardShortcut,
+    });
 
     if (WI._searchToolbarItem)
         WI._searchToolbarItem.focus();
+
+    if (searchQuery)
+        WI._searchTabContentView.performSearch(searchQuery);
 };
 
 WI._focusChanged = function(event)
