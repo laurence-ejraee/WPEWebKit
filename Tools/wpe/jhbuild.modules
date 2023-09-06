@@ -49,6 +49,10 @@
       href="https://github.com"/>
   <repository type="tarball" name="github-tarball"
       href="https://github.com/"/>
+  <repository type="tarball" name="gitlab-fdo-tarball"
+      href="https://gitlab.freedesktop.org"/>
+  <repository type="git" name="gitlab.red"
+      href="git@gitlab.consult.red:astro/"/>
   <repository type="tarball" name="savannah.gnu.org"
       href="http://download.savannah.gnu.org/releases/"/>
   <repository type="tarball" name="gnupg.org"
@@ -61,19 +65,19 @@
       href="http://xmlsoft.org"/>
 
   <autotools id="libffi" autogen-sh="configure">
-    <branch module="libffi/libffi-3.0.10.tar.gz" version="3.0.10"
+    <branch module="libffi/libffi-3.3.tar.gz" version="3.3"
              repo="sourceware.org-mirror"
-             hash="sha256:f01eb9027e9eb56aeaeef636649877756d475d714ef8b47f627f65bc5f3b492f"/>
+             hash="sha256:72fba7922703ddfa7a028d513ac15a85c8d54c8d67f55fa5a4802885dc652056"/>
   </autotools>
 
   <meson id="glib"
-         mesonargs="-Dlibmount=false -Dselinux=false">
+         mesonargs="-Dlibmount=disabled -Dselinux=disabled">
     <dependencies>
       <dep package="libffi"/>
     </dependencies>
-    <branch module="/pub/GNOME/sources/glib/2.58/glib-${version}.tar.xz" version="2.58.1"
+    <branch module="/pub/GNOME/sources/glib/2.64/glib-${version}.tar.xz" version="2.64.2"
             repo="ftp.gnome.org"
-            hash="sha256:97d6a9d926b6aa3dfaadad3077cfb43eec74432ab455dff14250c769d526d7d6">
+            hash="sha256:9a2f21ed8f13b9303399de13a0252b7cbcede593d26971378ec6cb90e87f2277">
     </branch>
   </meson>
 
@@ -81,9 +85,9 @@
     <dependencies>
       <dep package="glib"/>
     </dependencies>
-    <branch module="/pub/GNOME/sources/glib-networking/2.58/glib-networking-${version}.tar.xz" version="2.58.0"
+    <branch module="/pub/GNOME/sources/glib-networking/2.62/glib-networking-${version}.tar.xz" version="2.62.4"
             repo="ftp.gnome.org"
-            hash="sha256:bdfa0255e031b8ee003cc283002536b77ee76450105f1dc6ab066b9bf4330068"/>
+            hash="sha256:c18f289eec480fdce12044c0a06f77521edf9f460d16ad4213de61f2a3b294cf"/>
   </meson>
 
   <autotools id="libpsl"
@@ -97,16 +101,17 @@
             hash="sha256:f8fd0aeb66252dfcc638f14d9be1e2362fdaf2ca86bde0444ff4d5cc961b560f"/>
   </autotools>
 
-  <meson id="libsoup" mesonargs="-Dintrospection=disabled -Dgssapi=disabled -Dvapi=disabled">
+  <autotools id="libsoup" 
+             autogen-sh="configure" autogenargs="--disable-introspection">
     <dependencies>
       <dep package="glib-networking"/>
       <dep package="libpsl"/>
     </dependencies>
-    <branch module="/sources/libsoup/2.69/libsoup-${version}.tar.xz" version="2.69.90"
+    <branch module="/sources/libsoup/2.62/libsoup-${version}.tar.xz" version="2.62.3"
             repo="download.gnome.org"
-            hash="sha256:8ed18092cfb27d870a7c7c45992f3a216bd22dd6fd6d2c9fbf1adc2d6957cab8">
+            hash="sha256:d312ade547495c2093ff8bda61f9b9727a98cfdae339f3263277dd39c0451172">
     </branch>
-  </meson>
+  </autotools>
 
   <autotools id="fonts" supports-non-srcdir-builds="no"
              skip-autogen="true">
@@ -120,9 +125,9 @@
 
   <autotools id="freetype6" autogen-sh="configure"
         autogenargs="--with-harfbuzz=no">
-    <branch module="freetype/freetype-2.9.1.tar.bz2" version="2.9.1"
+    <branch module="freetype/freetype-2.10.4.tar.gz" version="2.10.4"
             repo="savannah.gnu.org"
-            hash="sha256:db8d87ea720ea9d5edc5388fc7a0497bb11ba9fe972245e0f7f4c7e8b1e1e84d"/>
+            hash="sha256:5eab795ebb23ac77001cfb68b7d4d50b5d6c7469247b0b01b2c953269f658dac"/>
   </autotools>
 
   <autotools id="fontconfig" autogen-sh="configure"
@@ -144,11 +149,11 @@
       <dep package="fontconfig"/>
       <dep package="icu"/>
     </dependencies>
-    <branch module="software/harfbuzz/release/harfbuzz-2.2.0.tar.bz2"
-            version="2.2.0"
-            checkoutdir="harfbuzz-2.2.0"
-            repo="freedesktop.org"
-            hash="sha256:b7ccfcbd56b970a709e8b9ea9fb46c922c606c2feef8f086fb6a8492e530f810"/>
+    <branch module="harfbuzz/harfbuzz/releases/download/${version}/harfbuzz-${version}.tar.xz"
+            version="2.7.2"
+            checkoutdir="harfbuzz-${version}"
+            repo="github-tarball"
+            hash="sha256:b8c048d7c2964a12f2c80deb6634dfc836b603dd12bf0d0a3df1627698e220ce"/>
   </autotools>
 
   <autotools id="icu"
@@ -164,9 +169,9 @@
   <autotools id="pixman"
              autogen-sh="configure"
              autogenargs="--enable-gtk=no">
-    <branch module="releases/pixman-0.34.0.tar.gz" version="0.34.0"
+    <branch module="releases/pixman-0.40.0.tar.gz" version="0.40.0"
             repo="cairographics.org"
-            hash="sha1:a1b1683c1a55acce9d928fea1ab6ceb79142ddc7"/>
+            hash="sha1:d7baa6377b6f48e29db011c669788bb1268d08ad"/>
   </autotools>
 
   <autotools id="cairo"
@@ -186,7 +191,10 @@
   </autotools>
 
   <cmake id="libwpe">
-    <branch repo="github.com" module="WebPlatformForEmbedded/libwpe.git" checkoutdir="libwpe" tag="b191f14936a64ae0685f50ce2bb22f7c50bf156d"/>
+    <branch repo="gitlab.red" 
+            module="ott-sidecar-integration-project/wpeframework-components/libwpe.git" 
+            checkoutdir="libwpe" 
+            tag="5a4dec7efbf49511a0ec6f589337b2840144e799"/>
   </cmake>
 
   <cmake id="wpebackend-fdo">
@@ -199,18 +207,17 @@
 
   <autotools id="libgpg-error" autogen-sh="autoreconf">
     <branch module="libgpg-error/libgpg-error-${version}.tar.bz2"
-            version="1.36"
+            version="1.37"
             repo="gnupg.org"
-            hash="sha256:babd98437208c163175c29453f8681094bcaf92968a15cafb1a276076b33c97c">
-      <patch file="libgpg-error-prepare-for-gawk-5-0.patch" strip="1"/>
+            hash="sha256:b32d6ff72a73cf79797f7f2d039e95e9c6f92f0c1450215410840ab62aea9763">
     </branch>
   </autotools>
 
   <autotools id="libgcrypt" autogen-sh="configure">
     <branch module="libgcrypt/libgcrypt-${version}.tar.bz2"
-            version="1.8.4"
+            version="1.8.6"
             repo="gnupg.org"
-            hash="sha256:f638143a0672628fde0cad745e9b14deb85dffb175709cacc1f4fe24b93f2227">
+            hash="sha256:0cba2700617b99fc33864a0c16b1fa7fdf9781d9ed3509f5d767178e5fd7b975">
         <patch file="libgcrypt-use-only-dev-urandom-for-testing.patch" strip="1"/>
     </branch>
     <dependencies>
@@ -218,16 +225,16 @@
     </dependencies>
   </autotools>
 
-  <autotools id="libepoxy" autogen-sh="configure">
-    <branch module="anholt/libepoxy/releases/download/1.4.3/libepoxy-1.4.3.tar.xz"
-            version="1.4.3" repo="github-tarball"/>
-  </autotools>
+  <meson id="libepoxy">
+    <branch module="anholt/libepoxy/releases/download/1.5.4/libepoxy-1.5.4.tar.xz"
+            version="1.5.4" repo="github-tarball"/>
+  </meson>
 
   <autotools id="wayland-protocols" autogen-sh="configure">
     <branch module="releases/wayland-protocols-${version}.tar.xz"
-            version="1.12"
+            version="1.18"
 	    repo="wayland.freedesktop.org"
-	    hash="sha256:3b19e8a9e1e19474756a7069db23b90ca9b8ebb438448c6063b4a7fc89b7c8b2"/>
+	    hash="sha256:3d73b7e7661763dc09d7d9107678400101ecff2b5b1e531674abfa81e04874b3"/>
   </autotools>
 
   <meson id="graphene">
@@ -249,10 +256,10 @@
 
   <distutils id="meson" python3="1">
     <branch repo="github-tarball"
-            version="0.50.1"
+            version="0.55.3"
             module="mesonbuild/meson/releases/download/${version}/meson-${version}.tar.gz"
             checkoutdir="meson-${version}"
-            hash="sha256:f68f56d60c80a77df8fc08fa1016bc5831605d4717b622c96212573271e14ecc"/>
+            hash="sha256:6bed2a25a128bbabe97cf40f63165ebe800e4fcb46db8ab7ef5c2b5789f092a5"/>
     <dependencies>
       <dep package="ninja"/>
     </dependencies>
@@ -303,9 +310,9 @@
 
   <autotools id="libxml2" supports-non-srcdir-builds="no"
              autogen-sh="./autogen.sh; ./configure --with-python=no">
-    <branch module="/sources/libxml2-2.9.5.tar.gz" version="2.9.5"
+    <branch module="/sources/libxml2-2.9.10.tar.gz" version="2.9.10"
             repo="xmlsoft.org"
-            hash="sha256:4031c1ecee9ce7ba4f313e91ef6284164885cdb69937a123f6a83bb6a72dcd38"/>
+            hash="sha256:aafee193ffb8fe0c82d4afef6ef91972cbaf5feea100edc2f262750611b4be1f"/>
   </autotools>
 
   <autotools id="shared-mime-info"
@@ -315,9 +322,9 @@
       <dep package="libxml2"/>
       <dep package="glib"/>
     </dependencies>
-    <branch module="/~hadess/shared-mime-info-${version}.tar.xz" version="1.10"
-            repo="freedesktop.org"
-            hash="sha256:c625a83b4838befc8cafcd54e3619946515d9e44d63d61c4adf7f5513ddfbebf"/>
+    <branch module="/xdg/shared-mime-info/uploads/80c7f1afbcad2769f38aeb9ba6317a51/shared-mime-info-${version}.tar.xz" version="1.12"
+            repo="gitlab-fdo-tarball"
+            hash="sha256:18b2f0fe07ed0d6f81951a5fd5ece44de9c8aeb4dc5bb20d4f595f6cc6bd403e"/>
   </autotools>
 
 </moduleset>
