@@ -210,9 +210,13 @@ void CDMPrivateThunder::loadAndInitialize()
 
 bool CDMPrivateThunder::supportsServerCertificates() const
 {
-    bool isSupported = opencdm_system_supports_server_certificate(m_thunderSystem.get());
-    GST_DEBUG("server certificate supported %s", boolForPrinting(isSupported));
-    return isSupported;
+    // Server certificates are not supported.
+    return false;
+    
+    // New API method requiring opencdm update:
+    // bool isSupported = opencdm_system_supports_server_certificate(m_thunderSystem.get());
+    // GST_DEBUG("server certificate supported %s", boolForPrinting(isSupported));
+    // return isSupported;
 }
 
 bool CDMPrivateThunder::supportsSessions() const
