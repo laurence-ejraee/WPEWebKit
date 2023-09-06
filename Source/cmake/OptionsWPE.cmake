@@ -10,7 +10,7 @@ CALCULATE_LIBRARY_VERSIONS_FROM_LIBTOOL_TRIPLE(WEBKIT 13 6 10)
 # CMAKE_INSTALL_* variables that are populated by the GNUInstallDirs macro.
 set(LIB_INSTALL_DIR "${CMAKE_INSTALL_FULL_LIBDIR}" CACHE PATH "Absolute path to library installation directory")
 set(EXEC_INSTALL_DIR "${CMAKE_INSTALL_FULL_BINDIR}" CACHE PATH "Absolute path to executable installation directory")
-set(LIBEXEC_INSTALL_DIR "${CMAKE_INSTALL_FULL_LIBEXECDIR}/wpe-webkit-${WPE_API_VERSION}" CACHE PATH "Absolute path to install executables executed by the library")
+set(LIBEXEC_INSTALL_DIR "${CMAKE_INSTALL_FULL_BINDIR}" CACHE PATH "Absolute path to install executables executed by the library")
 
 find_package(Cairo 1.14.0 REQUIRED)
 find_package(Fontconfig 2.8.0 REQUIRED)
@@ -37,7 +37,7 @@ include(GStreamerDefinitions)
 # without approval from a WPE reviewer. There must be strong reason to support
 # changing the value of the option.
 WEBKIT_OPTION_DEFAULT_PORT_VALUE(ENABLE_ACCELERATED_2D_CANVAS PUBLIC OFF)
-WEBKIT_OPTION_DEFAULT_PORT_VALUE(ENABLE_ACCESSIBILITY PUBLIC ON)
+WEBKIT_OPTION_DEFAULT_PORT_VALUE(ENABLE_ACCESSIBILITY PUBLIC OFF)
 WEBKIT_OPTION_DEFAULT_PORT_VALUE(ENABLE_ENCRYPTED_MEDIA PUBLIC ${ENABLE_EXPERIMENTAL_FEATURES})
 WEBKIT_OPTION_DEFAULT_PORT_VALUE(ENABLE_THUNDER PRIVATE OFF)
 WEBKIT_OPTION_DEFAULT_PORT_VALUE(ENABLE_WEBDRIVER PUBLIC ON)
@@ -78,12 +78,12 @@ WEBKIT_OPTION_DEFAULT_PORT_VALUE(ENABLE_CSS_CONIC_GRADIENTS PRIVATE ON)
 # there is a strong reason we should support changing the value of the option,
 # and the option is not relevant to any other WebKit ports.
 WEBKIT_OPTION_DEFINE(ENABLE_GTKDOC "Whether or not to use generate gtkdoc." PUBLIC OFF)
-WEBKIT_OPTION_DEFINE(USE_OPENJPEG "Whether to enable support for JPEG2000 images." PUBLIC ON)
-WEBKIT_OPTION_DEFINE(USE_WOFF2 "Whether to enable support for WOFF2 Web Fonts." PUBLIC ON)
+WEBKIT_OPTION_DEFINE(USE_OPENJPEG "Whether to enable support for JPEG2000 images." PUBLIC OFF)
+WEBKIT_OPTION_DEFINE(USE_WOFF2 "Whether to enable support for WOFF2 Web Fonts." PUBLIC OFF)
 WEBKIT_OPTION_DEFINE(ENABLE_WPE_QT_API "Whether to enable support for the Qt5/QML plugin" PUBLIC OFF)
 WEBKIT_OPTION_DEFINE(USE_SYSTEMD "Whether to enable journald logging" PUBLIC OFF)
 WEBKIT_OPTION_DEFINE(ENABLE_BREAKPAD "Whether or not enable breakpad minidump support." PUBLIC OFF)
-WEBKIT_OPTION_DEFINE(USE_SOUP2 "Whether to enable usage of Soup 2 instead of Soup 3." PUBLIC OFF)
+WEBKIT_OPTION_DEFINE(USE_SOUP2 "Whether to enable usage of Soup 2 instead of Soup 3." PUBLIC ON)
 
 # Private options specific to the WPE port.
 WEBKIT_OPTION_DEFINE(USE_GSTREAMER_HOLEPUNCH "Whether to enable GStreamer holepunch" PRIVATE OFF)
@@ -108,11 +108,7 @@ if (DEVELOPER_MODE)
     WEBKIT_OPTION_DEFAULT_PORT_VALUE(ENABLE_MINIBROWSER PUBLIC ON)
 endif ()
 
-if (CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT EXISTS "/.flatpak-info")
-    WEBKIT_OPTION_DEFAULT_PORT_VALUE(ENABLE_BUBBLEWRAP_SANDBOX PUBLIC ON)
-else ()
-    WEBKIT_OPTION_DEFAULT_PORT_VALUE(ENABLE_BUBBLEWRAP_SANDBOX PUBLIC OFF)
-endif ()
+WEBKIT_OPTION_DEFAULT_PORT_VALUE(ENABLE_BUBBLEWRAP_SANDBOX PUBLIC OFF)
 
 # Enable variation fonts when cairo >= 1.16, fontconfig >= 2.13.0, freetype >= 2.9.0 and harfbuzz >= 1.4.2.
 if (("${PC_CAIRO_VERSION}" VERSION_GREATER "1.16.0" OR "${PC_CAIRO_VERSION}" STREQUAL "1.16.0")
