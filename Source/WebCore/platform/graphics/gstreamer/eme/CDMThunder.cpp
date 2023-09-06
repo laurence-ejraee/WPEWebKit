@@ -652,6 +652,7 @@ void CDMInstanceSessionThunder::closeSession(const String& sessionID, CloseSessi
 
     if (m_session && !m_sessionID.isEmpty()) {
         opencdm_session_close(m_session->get());
+        opencdm_destruct_session(m_session->get()); // Ensure that OCDM ~Session() happens
         m_session = BoxPtr<OpenCDMSession>();
         auto instance = cdmInstanceThunder();
         if (instance) {
