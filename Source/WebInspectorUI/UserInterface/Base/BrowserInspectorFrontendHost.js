@@ -105,7 +105,7 @@ if (!window.InspectorFrontendHost) {
             socket.addEventListener("open", () => { this._socket = socket; });
             socket.addEventListener("close", () => {
                 this._socket = null;
-                window.close();
+                //window.close(); // laurence.ejraee AOASS-359 prevent inspector window closing on browser close
             });
         }
 
