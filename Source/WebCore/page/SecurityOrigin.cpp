@@ -237,7 +237,7 @@ void SecurityOrigin::setDomainFromDOM(const String& newDomain)
 bool SecurityOrigin::isSecure(const URL& url)
 {
     // Invalid URLs are secure, as are URLs which have a secure protocol.
-    if (!url.isValid() || LegacySchemeRegistry::shouldTreatURLSchemeAsSecure(url.protocol().toStringWithoutCopying()))
+    if (!url.isValid() || LegacySchemeRegistry::shouldTreatURLSchemeAsSecure(url.protocol().toStringWithoutCopying()) || isLoopbackIPAddress(url.host()))
         return true;
 
     // URLs that wrap inner URLs are secure if those inner URLs are secure.
