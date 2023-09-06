@@ -730,6 +730,9 @@ void AppendPipeline::handleAppsinkNewSampleFromStreamingThread(GstElement*)
 static GRefPtr<GstElement>
 createOptionalParserForFormat(GstPad* demuxerSrcPad)
 {
+#if ENABLE(THUNDER)
+    return nullptr;
+#endif
     GRefPtr<GstCaps> padCaps = adoptGRef(gst_pad_get_current_caps(demuxerSrcPad));
     GstStructure* structure = gst_caps_get_structure(padCaps.get(), 0);
     const char* mediaType = gst_structure_get_name(structure);

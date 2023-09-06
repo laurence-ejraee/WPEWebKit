@@ -52,6 +52,7 @@ public:
         GstBuffer* ivBuffer;
         GstBuffer* dataBuffer;
         GstBuffer* subsamplesBuffer;
+        GRefPtr<GstCaps> caps;
         size_t numSubsamples;
         WeakPtr<CDMProxyDecryptionClient> cdmProxyDecryptionClient;
     };

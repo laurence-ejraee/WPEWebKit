@@ -128,6 +128,9 @@ MediaSourcePrivate::AddStatus PlaybackPipeline::addSourceBuffer(RefPtr<SourceBuf
     stream->videoTrack = nullptr;
     stream->presentationSize = WebCore::FloatSize();
     stream->lastEnqueuedTime = MediaTime::invalidTime();
+#if ENABLE(ENCRYPTED_MEDIA)
+    stream->decryptorProbeId = 0;
+#endif
 
     gst_app_src_set_callbacks(GST_APP_SRC(stream->appsrc), &enabledAppsrcCallbacks, stream->parent, nullptr);
     gst_app_src_set_emit_signals(GST_APP_SRC(stream->appsrc), FALSE);

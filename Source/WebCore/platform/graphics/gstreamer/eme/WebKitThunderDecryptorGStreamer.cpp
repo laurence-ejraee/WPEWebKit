@@ -160,6 +160,13 @@ static bool decrypt(WebKitMediaCommonEncryptionDecrypt* decryptor, GstBuffer* iv
         return false;
     }
 
+    GRefPtr<GstPad> sinkpad = adoptGRef(gst_element_get_static_pad(reinterpret_cast<GstElement*>(self), "sink"));
+    GRefPtr<GstCaps> caps = adoptGRef(gst_pad_get_current_caps(sinkpad.get()));
+
+    GstStructure *capstruct = gst_caps_get_structure(caps.get(), 0);
+    const gchar* capsinfo = gst_structure_get_string(capstruct, "original-media-type");
+    GST_DEBUG_OBJECT(self, "CAPS %p - Stream Type = %s", caps.get(), capsinfo);
+
     CDMProxyThunder::DecryptionContext context = { };
     context.keyIDBuffer = keyIDBuffer;
     context.ivBuffer = ivBuffer;
@@ -167,6 +174,7 @@ static bool decrypt(WebKitMediaCommonEncryptionDecrypt* decryptor, GstBuffer* iv
     context.numSubsamples = subsampleCount;
     context.subsamplesBuffer = subsampleCount ? subsamplesBuffer : nullptr;
     context.cdmProxyDecryptionClient = webKitMediaCommonEncryptionDecryptGetCDMProxyDecryptionClient(decryptor);
+    context.caps = caps;
     bool result = priv->cdmProxy->decrypt(context);
 
     return result;
