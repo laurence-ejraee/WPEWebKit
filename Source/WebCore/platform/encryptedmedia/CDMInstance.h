@@ -45,7 +45,7 @@ struct CDMKeySystemConfiguration;
 
 // JavaScript's handle to a CDMInstance, must be used from the
 // main-thread only!
-class CDMInstance : public RefCounted<CDMInstance> {
+class CDMInstance : public ThreadSafeRefCounted<CDMInstance> {
 public:
     virtual ~CDMInstance() = default;
 
