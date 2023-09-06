@@ -37,7 +37,6 @@
 #include <WebCore/InspectorController.h>
 #include <WebCore/NicosiaBackingStoreTextureMapperImpl.h>
 #include <WebCore/NicosiaContentLayerTextureMapperImpl.h>
-#include <WebCore/NicosiaImageBackingStore.h>
 #include <WebCore/NicosiaImageBackingTextureMapperImpl.h>
 #include <WebCore/NicosiaPaintingEngine.h>
 #include <WebCore/Page.h>
@@ -173,12 +172,6 @@ bool CompositingCoordinator::flushPendingLayerChanges()
         m_client.commitSceneState(m_state);
         m_shouldSyncFrame = false;
     }
-
-    // Eject any backing stores whose only reference is held in the HashMap cache.
-    m_imageBackingStores.removeIf(
-        [](auto& it) {
-            return it.value->hasOneRef();
-        });
 
     return didSync;
 }
@@ -317,17 +310,6 @@ void CompositingCoordinator::purgeBackingStores()
 Nicosia::PaintingEngine& CompositingCoordinator::paintingEngine()
 {
     return *m_paintingEngine;
-}
-
-RefPtr<Nicosia::ImageBackingStore> CompositingCoordinator::imageBackingStore(uint64_t nativeImageID, Function<RefPtr<Nicosia::Buffer>()> createBuffer)
-{
-    auto addResult = m_imageBackingStores.ensure(nativeImageID,
-        [&] {
-            auto store = adoptRef(*new Nicosia::ImageBackingStore);
-            store->backingStoreState().buffer = createBuffer();
-            return store;
-        });
-    return addResult.iterator->value.copyRef();
 }
 
 void CompositingCoordinator::requestUpdate()

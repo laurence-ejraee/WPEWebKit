@@ -40,7 +40,6 @@
 #include <WebCore/NicosiaSceneIntegration.h>
 
 namespace Nicosia {
-class ImageBackingStore;
 class PaintingEngine;
 class SceneIntegration;
 }
@@ -48,7 +47,6 @@ class SceneIntegration;
 namespace WebCore {
 class GraphicsContext;
 class GraphicsLayer;
-class Image;
 }
 
 namespace WebKit {
@@ -104,7 +102,6 @@ private:
     void detachLayer(WebCore::CoordinatedGraphicsLayer*) override;
     void attachLayer(WebCore::CoordinatedGraphicsLayer*) override;
     Nicosia::PaintingEngine& paintingEngine() override;
-    RefPtr<Nicosia::ImageBackingStore> imageBackingStore(uint64_t, Function<RefPtr<Nicosia::Buffer>()>) override;
     void syncLayerState() override;
     bool nonCompositedWebGLEnabled() const override;
 
@@ -137,7 +134,6 @@ private:
     HashMap<Nicosia::PlatformLayer::LayerID, WebCore::CoordinatedGraphicsLayer*> m_registeredLayers;
 
     std::unique_ptr<Nicosia::PaintingEngine> m_paintingEngine;
-    HashMap<uint64_t, Ref<Nicosia::ImageBackingStore>> m_imageBackingStores;
 
     // We don't send the messages related to releasing resources to renderer during purging, because renderer already had removed all resources.
     bool m_isPurging { false };

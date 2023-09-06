@@ -27,7 +27,6 @@
 #include <WebCore/GraphicsLayer.h>
 #include <WebCore/IntRect.h>
 #include <WebCore/IntSize.h>
-#include <WebCore/NicosiaImageBackingStore.h>
 #include <WebCore/NicosiaPlatformLayer.h>
 #include <WebCore/TextureMapper.h>
 #include <WebCore/TextureMapperBackingStore.h>
@@ -95,7 +94,6 @@ private:
     } m_nicosia;
 
     std::unique_ptr<WebCore::TextureMapper> m_textureMapper;
-    HashSet<Ref<Nicosia::ImageBackingStore::BackingStoreContainer>> m_imageBackingStoreContainers;
 
     // Below two members are accessed by only the main thread. The painting thread must lock the main thread to access both members.
     CoordinatedGraphicsSceneClient* m_client;
