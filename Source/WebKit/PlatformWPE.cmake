@@ -17,7 +17,7 @@ configure_file(wpe/wpe-web-extension.pc.in ${WPEWebExtension_PKGCONFIG_FILE} @ON
 add_definitions(-DWEBKIT2_COMPILATION)
 
 add_definitions(-DLIBDIR="${LIB_INSTALL_DIR}")
-add_definitions(-DPKGLIBDIR="/applications/wpebrowser${LIB_INSTALL_DIR}/wpe-webkit-${WPE_API_VERSION}")
+add_definitions(-DPKGLIBDIR="${LIB_INSTALL_DIR}/wpe-webkit-${WPE_API_VERSION}")
 add_definitions(-DPKGLIBEXECDIR="${LIBEXEC_INSTALL_DIR}")
 add_definitions(-DDATADIR="${CMAKE_INSTALL_FULL_DATADIR}")
 add_definitions(-DLOCALEDIR="${CMAKE_INSTALL_FULL_LOCALEDIR}")
