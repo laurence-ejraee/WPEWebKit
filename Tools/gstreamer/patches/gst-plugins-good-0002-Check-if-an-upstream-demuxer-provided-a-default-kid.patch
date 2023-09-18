@@ -15,18 +15,20 @@ Signed-off-by: Xabier Rodriguez Calvar <calvaris@igalia.com>
  gst/isomp4/qtdemux.c | 43 +++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 43 insertions(+)
 
-diff --git a/gst/isomp4/qtdemux.c b/gst/isomp4/qtdemux.c
-index cf15fad46..e449b480c 100644
---- a/gst/isomp4/qtdemux.c
-+++ b/gst/isomp4/qtdemux.c
-@@ -451,6 +451,7 @@ struct _QtDemuxStream
+--- a/gst/isomp4/qtdemux.h	2023-09-13 11:52:07.764631000 +0100
++++ b/gst/isomp4/qtdemux.h	2023-09-13 11:52:18.790892293 +0100
+@@ -495,6 +495,7 @@
    guint32 protection_scheme_version;
    gpointer protection_scheme_info;      /* specific to the protection scheme */
    GQueue protection_scheme_event_queue;
 +  GstBuffer *default_kid;
  
-   gint ref_count;               /* atomic */
- };
+   /* KEY_UNITS trickmode with an interval */
+   GstClockTime last_keyframe_dts;
+diff --git a/gst/isomp4/qtdemux.c b/gst/isomp4/qtdemux.c
+index cf15fad46..e449b480c 100644
+--- a/gst/isomp4/qtdemux.c
++++ b/gst/isomp4/qtdemux.c
 @@ -2008,6 +2009,7 @@ _create_stream (GstQTDemux * demux, guint32 track_id)
    stream->stream_tags = gst_tag_list_new_empty ();
    gst_tag_list_set_scope (stream->stream_tags, GST_TAG_SCOPE_STREAM);
