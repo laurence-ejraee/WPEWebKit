@@ -279,6 +279,9 @@ int main(int argc, char *argv[])
     auto* settings = webkit_settings_new_with_settings(
         "enable-developer-extras", TRUE,
         "enable-webgl", TRUE,
+        "enable-websecurity", FALSE,
+        "allow-running-of-insecure-content", TRUE,
+        "allow-display-of-insecure-content", TRUE,
         "enable-media-stream", TRUE,
         "enable-encrypted-media", TRUE,
         "allow-scripts-to-close-windows", allowScriptsToCloseWindows,
