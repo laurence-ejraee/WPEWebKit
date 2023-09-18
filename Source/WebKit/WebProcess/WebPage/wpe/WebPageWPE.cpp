@@ -69,8 +69,7 @@ bool WebPage::platformCanHandleRequest(const ResourceRequest&)
 
 String WebPage::platformUserAgent(const URL&) const
 {
-    notImplemented();
-    return String();
+    return "Mozilla/5.0 (Astro;AS630SM;2.0.34) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0 Safari/605.1.15";
 }
 
 } // namespace WebKit
