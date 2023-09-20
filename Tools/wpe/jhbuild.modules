@@ -202,7 +202,9 @@
       <dep package="libwpe"/>
       <dep package="glib"/>
     </dependencies>
-    <branch repo="github.com" module="Igalia/WPEBackend-fdo.git" checkoutdir="wpebackend-fdo" tag="17316d7365f500176138d900f95aae73ef0e223a"/>
+    <branch repo="gitlab.red" module="ott-sidecar-integration-project/wpeframework-components/wpebackend-fdo.git" 
+            checkoutdir="wpebackend-fdo" 
+            tag="astro-2.28"/>
   </cmake>
 
   <autotools id="libgpg-error" autogen-sh="autoreconf">
