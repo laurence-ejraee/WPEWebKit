@@ -64,14 +64,15 @@
   <repository type="tarball" name="xmlsoft.org"
       href="http://xmlsoft.org"/>
 
-  <autotools id="libffi" autogen-sh="configure">
+  <autotools id="libffi" autogen-sh="configure" 
+          autogenargs='--disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared CPPFLAGS="-D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"'>
     <branch module="libffi/libffi-3.3.tar.gz" version="3.3"
              repo="sourceware.org-mirror"
              hash="sha256:72fba7922703ddfa7a028d513ac15a85c8d54c8d67f55fa5a4802885dc652056"/>
   </autotools>
 
   <meson id="glib"
-         mesonargs="-Dlibmount=disabled -Dselinux=disabled">
+         mesonargs="-Dlibmount=disabled -Dselinux=disabled -Dinternal_pcre=false -Dinstalled_tests=false -Doss_fuzz=disabled -Dselinux=disabled -Dlibmount=enabled -Ddefault_library=shared">
     <dependencies>
       <dep package="libffi"/>
     </dependencies>
@@ -81,7 +82,8 @@
     </branch>
   </meson>
 
-  <meson id="glib-networking">
+  <meson id="glib-networking"
+          mesonargs="-Dlibproxy=disabled -Dgnome_proxy=disabled -Dgnutls=enabled -Dopenssl=enabled -Ddefault_library=shared">
     <dependencies>
       <dep package="glib"/>
     </dependencies>
@@ -102,7 +104,7 @@
   </autotools>
 
   <autotools id="libsoup" 
-             autogen-sh="configure" autogenargs="--disable-introspection">
+             autogen-sh="configure" autogenargs="--disable-introspection --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --enable-shared --disable-glibtest --enable-vala=no --with-gssapi=no --without-introspection --without-gnome">
     <dependencies>
       <dep package="glib-networking"/>
       <dep package="libpsl"/>
@@ -124,14 +126,14 @@
   </autotools>
 
   <autotools id="freetype6" autogen-sh="configure"
-        autogenargs="--with-harfbuzz=no">
+        autogenargs="--with-harfbuzz=no --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --enable-shared --without-harfbuzz --enable-freetype-config --with-zlib --without-brotli --with-png">
     <branch module="freetype/freetype-2.10.4.tar.gz" version="2.10.4"
             repo="savannah.gnu.org"
             hash="sha256:5eab795ebb23ac77001cfb68b7d4d50b5d6c7469247b0b01b2c953269f658dac"/>
   </autotools>
 
   <autotools id="fontconfig" autogen-sh="configure"
-             autogenargs="--disable-docs"
+             autogenargs="--disable-docs --disable-gtk-doc-html --disable-doc --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --enable-shared"
              supports-non-srcdir-builds="no">
     <dependencies>
       <dep package="freetype6"/>
@@ -141,8 +143,7 @@
             hash="sha256:f655dd2a986d7aa97e052261b36aa67b0a64989496361eca8d604e6414006741"/>
   </autotools>
 
-  <autotools id="harfbuzz" autogen-sh="configure"
-        autogenargs="--with-cairo=no --with-glib=yes --with-freetype=yes --with-fontconfig=yes --with-icu=yes">
+  <meson id="harfbuzz" mesonargs="-Dglib=enabled -Dfreetype=enabled -Dicu=enabled -Dfontconfig=disabled -Dgdi=disabled -Ddirectwrite=disabled -Dcoretext=disabled -Dtests=disabled -Ddocs=disabled -Dbenchmark=disabled -Dicu_builtin=false -Dexperimental_api=false -Dfuzzer_ldflags= -Dcairo=enabled -Dgobject=disabled -Dintrospection=disabled -Dgraphite=disabled -Ddefault_library=shared">
     <dependencies>
       <dep package="glib"/>
       <dep package="freetype6"/>
@@ -154,21 +155,21 @@
             checkoutdir="harfbuzz-${version}"
             repo="github-tarball"
             hash="sha256:b8c048d7c2964a12f2c80deb6634dfc836b603dd12bf0d0a3df1627698e220ce"/>
-  </autotools>
+  </meson>
 
   <autotools id="icu"
              autogen-sh="./source/configure"
-             autogenargs="--disable-samples --enable-weak-threads">
-    <branch module="icu4c-63_1-src.tgz" version="63.1" checkoutdir="icu"
-            repo="webkitgtk-jhbuild-mirror"
-            hash="sha256:05c490b69454fce5860b7e8e2821231674af0a11d7ef2febea9a32512998cb9d">
+             autogenargs="--disable-samples --enable-weak-threads --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --enable-shared --disable-tests --disable-extras --disable-icuio --disable-layout">
+    <branch module="unicode-org/icu/releases/download/release-${version}/icu4c-67_1-src.tgz" version="67-1" checkoutdir="icu"
+            repo="github-tarball"
+            hash="sha256:94a80cd6f251a53bd2a997f6f1b5ac6653fe791dfab66e1eb0227740fb86d5dc">
       <patch file="icudata-stdlibs.patch" strip="1"/>
     </branch>
   </autotools>
 
   <autotools id="pixman"
              autogen-sh="configure"
-             autogenargs="--enable-gtk=no">
+             autogenargs="--enable-gtk=no --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --enable-shared --disable-gtk --disable-arm-simd --disable-arm-neon --disable-arm-iwmmxt">
     <branch module="releases/pixman-0.40.0.tar.gz" version="0.40.0"
             repo="cairographics.org"
             hash="sha1:d7baa6377b6f48e29db011c669788bb1268d08ad"/>
@@ -176,7 +177,7 @@
 
   <autotools id="cairo"
              autogen-sh="configure"
-             autogenargs="--enable-egl=yes --enable-glesv2">
+             autogenargs="--enable-egl=yes --enable-glesv2 --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --enable-shared --enable-trace=no --enable-interpreter=no --disable-directfb --enable-ft --enable-gobject --disable-gl --disable-vg --disable-xcb --without-x --disable-xlib-xrender --disable-ps --disable-pdf --enable-png --disable-script --disable-svg --disable-tee --disable-xml">
     <dependencies>
       <dep package="glib"/>
       <dep package="fontconfig"/>
@@ -207,7 +208,8 @@
             tag="astro-2.28"/>
   </cmake>
 
-  <autotools id="libgpg-error" autogen-sh="autoreconf">
+  <autotools id="libgpg-error" autogen-sh="autoreconf"
+          autogenargs="--disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --enable-shared --disable-tests">
     <branch module="libgpg-error/libgpg-error-${version}.tar.bz2"
             version="1.37"
             repo="gnupg.org"
@@ -215,7 +217,8 @@
     </branch>
   </autotools>
 
-  <autotools id="libgcrypt" autogen-sh="configure">
+  <autotools id="libgcrypt" autogen-sh="configure"
+          autogenargs="--disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --enable-shared --disable-tests">
     <branch module="libgcrypt/libgcrypt-${version}.tar.bz2"
             version="1.8.6"
             repo="gnupg.org"
@@ -227,7 +230,7 @@
     </dependencies>
   </autotools>
 
-  <meson id="libepoxy">
+  <meson id="libepoxy" mesonargs="-Ddocs=false -Dtests=false -Degl=yes -Dglx=no -Dx11=false -Ddefault_library=shared">
     <branch module="anholt/libepoxy/releases/download/1.5.4/libepoxy-1.5.4.tar.xz"
             version="1.5.4" repo="github-tarball"/>
   </meson>
@@ -248,13 +251,13 @@
     </dependencies>
   </meson>
 
-  <cmake id="openjpeg">
+  <!--cmake id="openjpeg">
     <branch repo="github-tarball"
             module="uclouvain/openjpeg/archive/v${version}.tar.gz"
             checkoutdir="openjpeg-${version}"
             version="2.3.0"
             hash="sha256:3dc787c1bb6023ba846c2a0d9b1f6e179f1cd255172bde9eb75b01f1e6c7d71a"/>
-  </cmake>
+  </cmake-->
 
   <distutils id="meson" python3="1">
     <branch repo="github-tarball"
@@ -279,16 +282,16 @@
   </autotools>
 
 
-  <meson id="atk" mesonargs="-Dintrospection=false">
+  <!--meson id="atk" mesonargs="-Dintrospection=false">
     <branch module="pub/GNOME/sources/atk/2.33/atk-2.33.3.tar.xz" version="2.33.3"
             repo="ftp.gnome.org"
             hash="sha256:532d1081e87b9f0a8d71733101e791818442fa1896531621d1aecc189e1a4ffe"/>
     <dependencies>
       <dep package="glib"/>
     </dependencies>
-  </meson>
+  </meson-->
 
-  <meson id="at-spi2-core" mesonargs="-Dintrospection=no -Dx11=no">
+  <!--meson id="at-spi2-core" mesonargs="-Dintrospection=no -Dx11=no">
     <branch module="pub/GNOME/sources/at-spi2-core/2.33/at-spi2-core-2.33.2.tar.xz" version="2.33.2"
             repo="ftp.gnome.org"
             hash="sha256:0e3f44707cccf9ec9098f84abdf91ea654c919eac3c688400f8d261383cc2abe">
@@ -296,9 +299,9 @@
     <dependencies>
       <dep package="glib"/>
     </dependencies>
-  </meson>
+  </meson-->
 
-  <meson id="at-spi2-atk">
+  <!--meson id="at-spi2-atk">
     <branch module="pub/GNOME/sources/at-spi2-atk/2.33/at-spi2-atk-2.33.2.tar.xz" version="2.33.2"
             repo="ftp.gnome.org"
             hash="sha256:64d4351b245d717ec6f4f81fd40fe67481ff8e62d3893d465f01e71d9a3db3d3">
@@ -308,10 +311,10 @@
       <dep package="atk"/>
       <dep package="at-spi2-core"/>
     </dependencies>
-  </meson>
+  </meson-->
 
   <autotools id="libxml2" supports-non-srcdir-builds="no"
-             autogen-sh="./autogen.sh; ./configure --with-python=no">
+             autogen-sh="./autogen.sh; ./configure --with-python=no --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --enable-shared --with-gnu-ld --without-python --with-lzma --with-iconv">
     <branch module="/sources/libxml2-2.9.10.tar.gz" version="2.9.10"
             repo="xmlsoft.org"
             hash="sha256:aafee193ffb8fe0c82d4afef6ef91972cbaf5feea100edc2f262750611b4be1f"/>
@@ -319,7 +322,7 @@
 
   <autotools id="shared-mime-info"
              autogen-sh="configure"
-             autogenargs="--disable-default-make-check">
+             autogenargs="--disable-default-make-check --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --enable-shared --disable-update-mimedb">
     <dependencies>
       <dep package="libxml2"/>
       <dep package="glib"/>
