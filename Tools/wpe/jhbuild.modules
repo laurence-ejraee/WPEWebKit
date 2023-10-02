@@ -90,8 +90,8 @@
             hash="sha256:c18f289eec480fdce12044c0a06f77521edf9f460d16ad4213de61f2a3b294cf"/>
   </meson>
 
-  <autotools id="libpsl"
-             autogenargs="--enable-runtime=libicu --enable-builtin=libicu">
+  <!--autotools id="libpsl"
+             autogenargs="-\-enable-runtime=libicu -\-enable-builtin=libicu">
     <dependencies>
       <dep package="icu"/>
     </dependencies>
@@ -99,7 +99,7 @@
             version="0.20.2"
             repo="github-tarball"
             hash="sha256:f8fd0aeb66252dfcc638f14d9be1e2362fdaf2ca86bde0444ff4d5cc961b560f"/>
-  </autotools>
+  </autotools-->
 
   <autotools id="libsoup" 
              autogen-sh="configure" autogenargs="--disable-introspection">
@@ -113,15 +113,15 @@
     </branch>
   </autotools>
 
-  <autotools id="fonts" supports-non-srcdir-builds="no"
+  <!--autotools id="fonts" supports-non-srcdir-builds="no"
              skip-autogen="true">
     <branch repo="github.com" module="WebKitGTK/webkitgtk-test-fonts.git" checkoutdir="webkitgtk-test-fonts" tag="0.0.8"/>
-  </autotools>
+  </autotools-->
 
-  <autotools id="dicts" supports-non-srcdir-builds="no"
+  <!--autotools id="dicts" supports-non-srcdir-builds="no"
              skip-autogen="true">
     <branch repo="github.com" module="mrobinson/webkitgtk-test-dicts.git" checkoutdir="webkitgtk-test-dicts" tag="0.0.1"/>
-  </autotools>
+  </autotools-->
 
   <autotools id="freetype6" autogen-sh="configure"
         autogenargs="--with-harfbuzz=no">
@@ -239,22 +239,22 @@
 	    hash="sha256:3d73b7e7661763dc09d7d9107678400101ecff2b5b1e531674abfa81e04874b3"/>
   </autotools>
 
-  <meson id="graphene">
+  <!--meson id="graphene">
     <branch repo="github.com"
             module="ebassi/graphene.git"
             tag="1.6.0"/>
     <dependencies>
       <dep package="glib"/>
     </dependencies>
-  </meson>
+  </meson-->
 
-  <cmake id="openjpeg">
+  <!--cmake id="openjpeg">
     <branch repo="github-tarball"
             module="uclouvain/openjpeg/archive/v${version}.tar.gz"
             checkoutdir="openjpeg-${version}"
             version="2.3.0"
             hash="sha256:3dc787c1bb6023ba846c2a0d9b1f6e179f1cd255172bde9eb75b01f1e6c7d71a"/>
-  </cmake>
+  </cmake-->
 
   <distutils id="meson" python3="1">
     <branch repo="github-tarball"
@@ -267,7 +267,7 @@
     </dependencies>
   </distutils>
 
-  <autotools id="xdg-dbus-proxy" autogen-sh="configure">
+  <!--autotools id="xdg-dbus-proxy" autogen-sh="configure">
     <branch repo="github-tarball"
             version="0.1.0"
             module="flatpak/xdg-dbus-proxy/releases/download/${version}/xdg-dbus-proxy-${version}.tar.xz"
@@ -276,19 +276,19 @@
     <dependencies>
       <dep package="glib"/>
     </dependencies>
-  </autotools>
+  </autotools-->
 
 
-  <meson id="atk" mesonargs="-Dintrospection=false">
+  <!--meson id="atk" mesonargs="-Dintrospection=false">
     <branch module="pub/GNOME/sources/atk/2.33/atk-2.33.3.tar.xz" version="2.33.3"
             repo="ftp.gnome.org"
             hash="sha256:532d1081e87b9f0a8d71733101e791818442fa1896531621d1aecc189e1a4ffe"/>
     <dependencies>
       <dep package="glib"/>
     </dependencies>
-  </meson>
+  </meson-->
 
-  <meson id="at-spi2-core" mesonargs="-Dintrospection=no -Dx11=no">
+  <!--meson id="at-spi2-core" mesonargs="-Dintrospection=no -Dx11=no">
     <branch module="pub/GNOME/sources/at-spi2-core/2.33/at-spi2-core-2.33.2.tar.xz" version="2.33.2"
             repo="ftp.gnome.org"
             hash="sha256:0e3f44707cccf9ec9098f84abdf91ea654c919eac3c688400f8d261383cc2abe">
@@ -296,9 +296,9 @@
     <dependencies>
       <dep package="glib"/>
     </dependencies>
-  </meson>
+  </meson-->
 
-  <meson id="at-spi2-atk">
+  <!--meson id="at-spi2-atk">
     <branch module="pub/GNOME/sources/at-spi2-atk/2.33/at-spi2-atk-2.33.2.tar.xz" version="2.33.2"
             repo="ftp.gnome.org"
             hash="sha256:64d4351b245d717ec6f4f81fd40fe67481ff8e62d3893d465f01e71d9a3db3d3">
@@ -308,7 +308,7 @@
       <dep package="atk"/>
       <dep package="at-spi2-core"/>
     </dependencies>
-  </meson>
+  </meson-->
 
   <autotools id="libxml2" supports-non-srcdir-builds="no"
              autogen-sh="./autogen.sh; ./configure --with-python=no">

@@ -22,7 +22,7 @@
 
   <!-- Please use http/https to access repositories to be friendly to users stuck behind firewalls. -->
   <repository type="tarball" name="gstreamer"
-      href="http://gstreamer.freedesktop.org/src/"/>
+      href="https://gstreamer.freedesktop.org/src/"/>
   <repository type="tarball" name="github-tarball"
       href="https://github.com/"/>
   <repository type="git" name="github-ssh"
@@ -34,11 +34,11 @@
   <repository type="tarball" name="ffmpeg" href="https://ffmpeg.org/releases/"/>
   <repository type="tarball" name="ftp.gnome.org" href="http://ftp.gnome.org"/>
 
-  <meson id="orc" mesonargs="-Dgtk_doc=disabled">
+  <!--meson id="orc" mesonargs="-Dgtk_doc=disabled">
     <branch module="orc/orc-${version}.tar.xz" version="0.4.30"
             repo="gstreamer"
             hash="sha256:ba41b92146a5691cd102eb79c026757d39e9d3b81a65810d2946a1786a1c4972"/>
-  </meson>
+  </meson-->
 
   <autotools id="openh264" supports-non-srcdir-builds="no" autogen-sh="pseudo-configure">
     <branch module="cisco/openh264/archive/v${version}.tar.gz" version="1.5.0"
@@ -47,19 +47,19 @@
     </branch>
   </autotools>
 
-  <cmake id="aom" cmakeargs="-DBUILD_SHARED_LIBS=1">
+  <!--cmake id="aom" cmakeargs="-DBUILD_SHARED_LIBS=1">
     <branch repo="aomedia.googlesource.com" module="aom" checkoutdir="aom" branch="master"
             revision="master" tag="cdb083e84a71d6d31163a4f64f18dc1328fd782c" />
-  </cmake>
+  </cmake-->
 
-  <autotools id="libsrtp">
+  <!--autotools id="libsrtp">
     <branch repo="github-tarball" module="cisco/libsrtp/archive/v${version}.tar.gz" version="2.2.0"
             checkoutdir="libsrtp-${version}"/>
-  </autotools>
+  </autotools-->
 
-  <autotools id="pango"
+  <!--autotools id="pango"
              autogen-sh="configure"
-             autogenargs="--with-cairo --disable-introspection">
+             autogenargs="-\-with-cairo -\-disable-introspection">
     <branch module="pub/GNOME/sources/pango/1.40/pango-1.40.5.tar.xz" version="1.40.5"
             repo="ftp.gnome.org"
             hash="sha256:24748140456c42360b07b2c77a1a2e1216d07c056632079557cd4e815b9d01c9"/>
@@ -71,13 +71,14 @@
            <dep package="fontconfig"/>
          </if>
     </dependencies>
-  </autotools>
+  </autotools-->
 
   <meson id="gstreamer" mesonargs="-Dgtk_doc=disabled -Dintrospection=disabled -Dexamples=disabled -Dtests=disabled">
     <dependencies>
       <dep package="orc"/>
     </dependencies>
     <branch hash="sha256:4ec816010dd4d3a93cf470ad0a6f25315f52b204eb1d71dfa70ab8a1c3bd06e6" module="gstreamer/gstreamer-${version}.tar.xz" repo="gstreamer" version="1.18.6">
+      <patch file="gstreamer-0001-Small-robustness-fixes.patch" strip="1" />
     </branch>
   </meson>
 
@@ -89,6 +90,12 @@
       <dep package="gstreamer"/>
     </dependencies>
     <branch hash="sha256:56a9ff2fe9e6603b9e658cf6897d412a173d2180829fe01e92568549c6bd0f5b" module="gst-plugins-base/gst-plugins-base-${version}.tar.xz" repo="gstreamer" version="1.18.6">
+      <patch file="base-0001-decodebin-Manually-sync-element-states-with-parent-a.patch" strip="1" />
+      <patch file="base-0002-Revert-appsink-Reuse-sample-object-in-pull_sample-if.patch" strip="1" />
+      <patch file="base-0003-gstglcolorconvert-Reverse-direction-when-asking-for-.patch" strip="1" />
+      <patch file="base-0004-Build-fixes-for-GST_TAG_API-and-audio-buffer.patch" strip="1" />
+      <patch file="base-0005-gsturisourcebin-Don-t-try-to-plug-a-typefinder-on-dy.patch" strip="1" />
+      <patch file="base-0006-streamsynchronizer-Consider-streams-having-received-.patch" strip="1" />
     </branch>
   </meson>
 
@@ -98,7 +105,25 @@
     </dependencies>
 
     <branch hash="sha256:26723ac01fcb360ade1f41d168c7c322d8af4ceb7e55c8c12ed2690d06a76eed" module="gst-plugins-good/gst-plugins-good-${version}.tar.xz" repo="gstreamer" version="1.18.6">
-      <patch file="gst-plugins-good-0002-Check-if-an-upstream-demuxer-provided-a-default-kid.patch" strip="1" />
+      <patch file="good-0001-souphttpsrc-cookie-jar-and-context-query-support.patch" strip="1" />
+      <patch file="good-0002-0007-qtdemux-dont-check-pushbased-edts.patch.patch" strip="1" />
+      <patch file="good-0003-matroskademux-Start-stream-time-at-zero.patch" strip="1" />
+      <patch file="good-0004-matroskademux-emit-no-more-pads-when-the-Tracks-elem.patch" strip="1" />
+      <patch file="good-0005-Check-if-an-upstream-demuxer-provided-a-default-kid.patch" strip="1" />
+      <patch file="good-0006-qtdemux-Allow-streams-with-no-specified-protection-s.patch" strip="1" />
+      <patch file="good-0007-qtdemux-added-support-for-cbcs-encryption-scheme.patch" strip="1" />
+      <patch file="good-0008-qtdemux-No-need-for-new-application-x-cbcs-caps.patch" strip="1" />
+      <patch file="good-0009-Revert-audioparsers-add-back-segment-clipping-to-par.patch" strip="1" />
+      <patch file="good-0010-qtdemux-Don-t-emit-GstSegment-correcting-start-time-.patch" strip="1" />
+      <patch file="good-0011-qtdemux-Add-MSE-style-flush.patch" strip="1" />
+      <patch file="good-0012-qtdemux-Fix-crash-on-MSE-style-flush.patch" strip="1" />
+      <patch file="good-0013-qtdemux-Add-support-for-cenc-sample-grouping.patch" strip="1" />
+      <patch file="good-0014-qtdemux-Fix-segfault-in-cenc-sample-grouping.patch" strip="1" />
+      <patch file="good-0015-qtdemux-emit-no-more-pads-after-pruning-old-pads.patch" strip="1" />
+      <patch file="good-0015-Revert-0007-qtdemux-dont-check-pushbased-edts.patch.patch" strip="1" />
+      <patch file="good-0016-qtdemux-Fix-critical-message-on-cenc-sample-grouping.patch" strip="1" />
+      <patch file="good-0017-Avoid-sending-EOS-prematurely-for-live-stream.patch" strip="1" />
+      <patch file="good-0018-audioparser-remove-eac3-aacparse-for-svp.patch" strip="1" />
     </branch>
   </meson>
 
@@ -112,7 +137,17 @@
       <dep package="pango"/>
     </dependencies>
     <branch hash="sha256:0b1b50ac6311f0c510248b6cd64d6d3c94369344828baa602db85ded5bc70ec9" module="gst-plugins-bad/gst-plugins-bad-${version}.tar.xz" repo="gstreamer" version="1.18.6">
-      <patch file="gst-plugins-bad-0006-mssdemux-parse-protection-data.patch" strip="1" />
+      <patch file="bad-0001-adaptivedemux-minimal-HTTP-context-support.patch" strip="1" />
+      <patch file="bad-0002-Fix-to-set-current_fragment-for-live-streaming.patch" strip="1" />
+      <patch file="bad-0003-Add-a-workaround-patch-for-the-mss-live-stream-fragm.patch" strip="1" />
+      <patch file="bad-0004-mssdemux-Reduce-SmoothStreaming-latency-on-live-stre.patch" strip="1" />
+      <patch file="bad-0005-mssdemux-Ignore-inactive-streams-to-compute-min-frag.patch" strip="1" />
+      <patch file="bad-0006-smoothstreaming-add-support-for-absolute-fragment-ur.patch" strip="1" />
+      <patch file="bad-0007-Fix-HLS-live-stream-issues-with-http-cdn.metrologica.patch" strip="1" />
+      <patch file="bad-0008-Parse-playready-payload.patch" strip="1" />
+      <patch file="bad-0009-mssdemux-support-for-live-content-as-vod.patch" strip="1" />
+      <patch file="bad-0010-mssdemux-return-initialization-data-decoded-from-bas.patch" strip="1" />
+      <patch file="bad-0011-wayland-patch-update-to-handle-non-overlay-case.patch" strip="1" />
     </branch>
   </meson>
 

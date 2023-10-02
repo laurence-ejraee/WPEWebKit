@@ -1,0 +1,39 @@
+From 021572de93b364825955073af6493012aac375ac Mon Sep 17 00:00:00 2001
+From: Xabier Rodriguez Calvar <calvaris@igalia.com>
+Date: Wed, 3 May 2023 13:21:23 +0200
+Subject: [PATCH] qtdemux: emit no-more-pads after pruning old pads
+
+If we don't do that, clients can rely on this signal to see the final pad
+topology but it won't be the real one as some of them will disappear after
+emitting that signal. This can happen after injecting a different init segment.
+
+Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4535>
+---
+ gst/isomp4/qtdemux.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gst/isomp4/qtdemux.c b/gst/isomp4/qtdemux.c
+index a872a69090..361d6e2535 100644
+--- a/gst/isomp4/qtdemux.c
++++ b/gst/isomp4/qtdemux.c
+@@ -14372,8 +14372,6 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
+ 
+   gst_qtdemux_guess_bitrate (qtdemux);
+ 
+-  gst_element_no_more_pads (GST_ELEMENT_CAST (qtdemux));
+-
+   /* If we have still old_streams, it's no more used stream */
+   for (i = 0; i < qtdemux->old_streams->len; i++) {
+     QtDemuxStream *stream = QTDEMUX_NTH_OLD_STREAM (qtdemux, i);
+@@ -14391,6 +14389,8 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
+ 
+   g_ptr_array_set_size (qtdemux->old_streams, 0);
+ 
++  gst_element_no_more_pads (GST_ELEMENT_CAST (qtdemux));
++
+   /* check if we should post a redirect in case there is a single trak
+    * and it is a redirecting trak */
+   if (QTDEMUX_N_STREAMS (qtdemux) == 1 &&
+-- 
+2.39.2
+

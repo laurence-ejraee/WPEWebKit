@@ -1,0 +1,63 @@
+From bdff780fe9733b520f48ff7642afdf877a3a0b26 Mon Sep 17 00:00:00 2001
+From: Xabier Rodriguez Calvar <calvaris@igalia.com>
+Date: Mon, 8 May 2023 16:55:26 +0200
+Subject: [PATCH] qtdemux: Fix critical message on cenc sample grouping parsing
+
+Inside qtdemux_parse_sbgp there is already a check to ensure the fragment group
+properties are not null but it is being hit in some examples and it is better to
+directly avoid the critical.
+
+Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4576>
+---
+ .../gst-plugins-good/gst/isomp4/qtdemux.c     | 27 ++++++++++---------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
+
+diff --git a/gst/isomp4/qtdemux.c b/gst/isomp4/qtdemux.c
+index 8da64c9c8c..d42d37d703 100644
+--- a/gst/isomp4/qtdemux.c
++++ b/gst/isomp4/qtdemux.c
+@@ -4444,8 +4444,8 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
+         && (stream->protection_scheme_type == FOURCC_cenc
+             || stream->protection_scheme_type == FOURCC_cbcs)) {
+       QtDemuxCencSampleSetInfo *info = stream->protection_scheme_info;
+-      GNode *sbgp_node, *sgpd_node;
+-      GstByteReader sgpd_data, sbgp_data;
++      GNode *sgpd_node;
++      GstByteReader sgpd_data;
+ 
+       if (info->fragment_group_properties) {
+         g_ptr_array_free (info->fragment_group_properties, TRUE);
+@@ -4471,17 +4471,20 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
+             FOURCC_sgpd, &sgpd_data);
+       }
+ 
+-      sbgp_node = qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_sbgp,
+-          &sbgp_data);
+-      while (sbgp_node) {
+-        if (qtdemux_parse_sbgp (qtdemux, stream, &sbgp_data, FOURCC_seig,
+-                &info->sample_to_group_map, info->default_properties,
+-                info->track_group_properties,
+-                info->fragment_group_properties)) {
+-          break;
++      if (info->fragment_group_properties) {
++        GstByteReader sbgp_data;
++        GNode *sbgp_node = qtdemux_tree_get_child_by_type_full (traf_node,
++            FOURCC_sbgp, &sbgp_data);
++        while (sbgp_node) {
++          if (qtdemux_parse_sbgp (qtdemux, stream, &sbgp_data, FOURCC_seig,
++                  &info->sample_to_group_map, info->default_properties,
++                  info->track_group_properties,
++                  info->fragment_group_properties)) {
++            break;
++          }
++          sbgp_node = qtdemux_tree_get_sibling_by_type_full (sbgp_node,
++              FOURCC_sgpd, &sbgp_data);
+         }
+-        sbgp_node = qtdemux_tree_get_sibling_by_type_full (sbgp_node,
+-            FOURCC_sgpd, &sbgp_data);
+       }
+     }
+ 
+-- 
+2.39.2
+

@@ -1,0 +1,27 @@
+From f59bfa6045fd07fd512bd1ddda3159ace0b33071 Mon Sep 17 00:00:00 2001
+From: Xabier Rodriguez Calvar <calvaris@igalia.com>
+Date: Tue, 2 May 2023 11:32:01 +0200
+Subject: [PATCH 14/16] qtdemux: Fix segfault in cenc sample grouping
+
+Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4523>
+---
+ gst/isomp4/qtdemux.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/gst/isomp4/qtdemux.c b/gst/isomp4/qtdemux.c
+index a4d839b88..f1bdc8f6f 100644
+--- a/gst/isomp4/qtdemux.c
++++ b/gst/isomp4/qtdemux.c
+@@ -4287,7 +4287,8 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
+       goto missing_tfhd;
+ 
+     /* Sample grouping support */
+-    if (stream->protected && (stream->protection_scheme_type == FOURCC_cenc
++    if (stream != NULL && stream->protected
++        && (stream->protection_scheme_type == FOURCC_cenc
+             || stream->protection_scheme_type == FOURCC_cbcs)) {
+       QtDemuxCencSampleSetInfo *info = stream->protection_scheme_info;
+       GNode *sbgp_node, *sgpd_node;
+-- 
+2.34.1
+

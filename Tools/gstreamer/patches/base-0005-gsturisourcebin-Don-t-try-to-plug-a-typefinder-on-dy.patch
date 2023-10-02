@@ -1,0 +1,53 @@
+From 1961939a71e0da07072830aebf871341a3d745e9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Enrique=20Oca=C3=B1a=20Gonz=C3=A1lez?= <eocanha@igalia.com>
+Date: Fri, 24 Feb 2023 14:56:37 +0100
+Subject: [PATCH] gsturisourcebin: Don't try to plug a typefinder on dynamic
+ sources.
+
+setup_source() tries to plug a typefind element unconditionally to the
+source element on non-live streams, no matter if the element is dynamic
+or not. In the former case, the element might not have any src pad
+created, so the plugging will fail, triggering an unrecoverable error.
+
+This patch only tries the plugging when the element is not dynamic (no
+new-pad callback has been configured). In case the element is dynamic,
+the callback will take care of configuration when pads appear in the
+future.
+
+This solves many regressions on the YouTube MSE Conformance Tests[1] at
+least in downstream WPE 2.38[2] after migrating from GStreamer 1.16 to
+1.18, a change that introduces Playbin 3.
+
+[1] https://ytlr-cert.appspot.com/latest/main.html
+[2] https://github.com/WebPlatformForEmbedded/WPEWebKit/tree/wpe-2.38
+---
+ gst/playback/gsturisourcebin.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/gst/playback/gsturisourcebin.c b/gst/playback/gsturisourcebin.c
+index 9f637fb01..24f2b04b6 100644
+--- a/gst/playback/gsturisourcebin.c
++++ b/gst/playback/gsturisourcebin.c
+@@ -2282,10 +2282,15 @@ setup_source (GstURISourceBin * urisrc)
+ 
+     return TRUE;
+   } else if (urisrc->is_stream) {
+-    GST_DEBUG_OBJECT (urisrc, "Setting up streaming");
+-    /* do the stream things here */
+-    if (!setup_typefind (urisrc, NULL))
+-      goto streaming_failed;
++    if (!urisrc->src_np_sig_id) {
++      GST_DEBUG_OBJECT (urisrc, "Setting up streaming");
++      /* do the stream things here */
++      if (!setup_typefind (urisrc, NULL))
++        goto streaming_failed;
++    } else {
++      GST_DEBUG_OBJECT (urisrc, "Not setting up streaming yet, waiting for"
++          " dynamic pads to appear");
++    }
+   } else {
+     GstIterator *pads_iter;
+     gboolean done = FALSE;
+-- 
+2.34.1
+

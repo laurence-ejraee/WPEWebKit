@@ -1,0 +1,18 @@
+Date: Mar 9, 2020 1:41 AM
+From: cbbe384395b52a5c993ddb8d3be0fcf6c06cd9d3 Oct 31, 2018 11:56 PM
+Subject: [PATCH] Avoid sending EOS prematurely for live stream
+Source: COMCAST
+Upstream-Status: Pending
+Signed-off-by: nrajan002c <nambi_rajang@cable.comcast.com>
+---
+--- a/gst/isomp4/qtdemux.c	2023-02-24 14:12:15.012763000 +0000
++++ b/gst/isomp4/qtdemux.c	2023-02-24 14:34:23.739536959 +0000
+@@ -7817,7 +7817,7 @@
+ 
+           /* check for segment end */
+           if (G_UNLIKELY (demux->segment.stop != -1
+-                  && demux->segment.stop <= pts && stream->on_keyframe)
++                  && demux->segment.stop <= dts && stream->on_keyframe)
+               && !(demux->upstream_format_is_time && demux->segment.rate < 0)) {
+             GST_DEBUG_OBJECT (demux, "we reached the end of our segment.");
+             stream->time_position = GST_CLOCK_TIME_NONE;        /* this means EOS */
