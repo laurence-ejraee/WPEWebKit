@@ -162,7 +162,21 @@ static void webViewClose(WebKitWebView* webView, gpointer userData)
 
 static WebKitWebView* createWebView(WebKitWebView* webView, WebKitNavigationAction*, gpointer)
 {
-    auto backend = createViewBackend(1280, 720);
+    // laurence.ejraee Taken from wpebackend-rdk view-backend.cpp:
+    uint32_t width = 1280;
+    uint32_t height = 720;
+
+    const char* width_text = ::getenv("WEBKIT_RESOLUTION_WIDTH");
+    const char* height_text = ::getenv("WEBKIT_RESOLUTION_HEIGHT");
+    if (width_text != nullptr) {
+        width = ::atoi(width_text);
+    }
+    if (height_text != nullptr) {
+        height = ::atoi(height_text);
+    }
+    //
+
+    auto backend = createViewBackend(width, height);
     struct wpe_view_backend* wpeBackend = backend->backend();
     if (!wpeBackend)
         return nullptr;
@@ -215,7 +229,21 @@ int main(int argc, char *argv[])
 
     auto* loop = g_main_loop_new(nullptr, FALSE);
 
-    auto backend = createViewBackend(1280, 720);
+    // laurence.ejraee Taken from wpebackend-rdk view-backend.cpp:
+    uint32_t width = 1280;
+    uint32_t height = 720;
+
+    const char* width_text = ::getenv("WEBKIT_RESOLUTION_WIDTH");
+    const char* height_text = ::getenv("WEBKIT_RESOLUTION_HEIGHT");
+    if (width_text != nullptr) {
+        width = ::atoi(width_text);
+    }
+    if (height_text != nullptr) {
+        height = ::atoi(height_text);
+    }
+    //
+
+    auto backend = createViewBackend(width, height);
     struct wpe_view_backend* wpeBackend = backend->backend();
     if (!wpeBackend) {
         g_warning("Failed to create WPE view backend");
