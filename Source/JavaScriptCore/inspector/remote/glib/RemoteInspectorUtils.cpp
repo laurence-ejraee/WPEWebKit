@@ -42,7 +42,16 @@ GRefPtr<GBytes> backendCommands()
     static bool moduleLoaded = false;
 
     if (!moduleLoaded) {
-        GModule* resourcesModule = g_module_open(PKGLIBDIR G_DIR_SEPARATOR_S "libWPEWebInspectorResources.so", G_MODULE_BIND_LAZY);
+        // laurence.ejraee Add option to set path for libWPEWebInspectorResources.so similar to WebKitWebContext.cpp libWPEInjectedBundle.so
+        GModule* resourcesModule;
+
+        const char* inspectorDirectory = g_getenv("WEBKIT_INSPECTOR_RESOURCES_PATH");
+
+        if (inspectorDirectory && g_file_test(inspectorDirectory, G_FILE_TEST_IS_DIR))
+            resourcesModule = g_module_open(g_build_filename(inspectorDirectory, "libWPEWebInspectorResources.so", nullptr), G_MODULE_BIND_LAZY);
+        else
+            resourcesModule = g_module_open(PKGLIBDIR G_DIR_SEPARATOR_S "libWPEWebInspectorResources.so", G_MODULE_BIND_LAZY);
+
         if (!resourcesModule) {
             WTFLogAlways("Error loading libWPEWebInspectorResources.so: %s", g_module_error());
             return nullptr;
