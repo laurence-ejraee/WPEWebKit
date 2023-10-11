@@ -327,7 +327,7 @@ MemoryPressureHandler::MemoryUsagePoller::MemoryUsagePoller()
                         underMemoryPressure = true;
                         critical = value + value_swap > s_pollMaximumProcessMemoryCriticalLimit;
                         synchronous = value + value_swap > s_pollMaximumProcessMemoryCriticalLimit * 1.05;
-                        WTFLogAlways("MemoryPressureHandler: PROCESS Memory under pressure! %s", critical ? "critical" : "non-critical");
+                        WTFLogAlways("MemoryPressureHandler: PROCESS Memory under pressure! %uMB %s", value/MB, critical ? "critical" : "non-critical");
                     }
                 }
             }
