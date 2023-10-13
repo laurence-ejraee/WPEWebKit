@@ -638,6 +638,7 @@ private:
     double m_obligatoryBackingStoreBytes { 0 };
     double m_secondaryBackingStoreBytes { 0 };
 #endif
+    double m_layersBackingStoreBytes { 0 };
 
     Color m_viewBackgroundColor;
     Color m_rootExtendedBackgroundColor;

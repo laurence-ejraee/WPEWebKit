@@ -790,6 +790,7 @@ bool RenderLayerCompositor::updateCompositingLayers(CompositingUpdateType update
         LOG_WITH_STREAM(Compositing, stream << "\nUpdate " << m_rootLayerUpdateCount << " of " << (isMainFrame ? "main frame" : frame.tree().uniqueName().string().utf8().data()) << " - compositing policy is " << m_compositingPolicy);
     }
 #endif
+    m_layersBackingStoreBytes = 0; // Reset layers memory sum on update
 
     // FIXME: optimize root-only update.
     if (updateRoot->hasDescendantNeedingCompositingRequirementsTraversal() || updateRoot->needsCompositingRequirementsTraversal()) {
@@ -1260,6 +1261,15 @@ void RenderLayerCompositor::updateBackingAndHierarchy(RenderLayer& layer, Vector
         scrollingStateForDescendants.nextChildIndex = 0;
         
         traversalStateForDescendants.compositingAncestor = &layer;
+
+        // laurence.ejraee Emulator warning when STB GFX might be too high based on layers memory
+        RequiresCompositingData queryData;
+        if (requiresCompositingLayer(layer, queryData) || layer.isRenderViewLayer())
+            m_layersBackingStoreBytes += layerBacking->backingStoreMemoryEstimate();
+        
+        if (m_layersBackingStoreBytes/MB > 100 && m_contentLayersCount > 1)
+            WTFLogAlways("WARNING: Layers memory is high! (%fMB) Black boxes might be seen on STB due to high GFX usage", m_layersBackingStoreBytes/MB);
+
 
 #if !LOG_DISABLED
         logLayerInfo(layer, "updateBackingAndHierarchy", traversalState.depth);
