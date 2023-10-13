@@ -1,0 +1,72 @@
+#!/bin/bash
+
+###
+# Customizable Launch Options:
+#url="https://tv.iq.com/"
+#url="http://127.0.0.1/testcases/mem-alloc/"
+#url="https://syok.stb-production.astro.com.my/syok.html?nav=main&page=dashboard"
+width=1920
+height=1016
+wpe_ram_size="500m"
+wpe_poll_max_memory="databaseprocess:30m,networkprocess:80m,webprocess:250m,rpcprocess:20"
+prevent_process_memory_kill="0"
+debug_level=""
+
+###
+
+if [ ! -z "${debug_level}" ]
+then
+  echo "WEBKIT_DEBUG=${debug_level}"
+  export WEBKIT_DEBUG="${debug_level}"
+fi
+
+export GDK_BACKEND="wayland"
+export XDG_SESSION_TYPE="wayland"
+
+cat >/tmp/.mbweston.ini << EOF
+[shell]
+background-color=0xff000000
+panel-location=""
+[core]
+repaint-window=15
+EOF
+
+WAYSOCKNAME="WebKitTestSocket${RANDOM}"
+WAYSOCKETFILE="/run/user/${UID}/${WAYSOCKNAME}"
+
+function teardown() {
+    for cpid in $(pgrep -P $$); do kill -TERM "${cpid}" &>/dev/null; done
+    sleep 0.25
+    for cpid in $(pgrep -P $$); do kill -QUIT "${cpid}" &>/dev/null; done
+    sleep 0.25
+    for cpid in $(pgrep -P $$); do kill -KILL "${cpid}" &>/dev/null; done
+    rm -f "${WAYSOCKETFILE}"
+    exit 0
+}
+
+function runweston() {
+    if test -e "${WAYSOCKETFILE}" && grep -q "${WAYSOCKETFILE}" /proc/net/unix; then
+        echo "Weston socket /run/user/${UID}/WebKitTestSocket in use. Not starting weston"
+        # Disable trap
+        trap "" INT TERM QUIT EXIT
+    else
+        echo "Starting weston with resolution ${1}x${2}"
+        weston --width=${1} --height=${2} --idle-time=0 --config=/tmp/.mbweston.ini -B x11-backend.so --socket="${WAYSOCKNAME}" &>/dev/null &
+        sleep 0.5;
+    fi
+}
+
+trap "teardown" INT TERM QUIT EXIT
+
+
+runweston ${width} ${height}
+export WAYLAND_DISPLAY="${WAYSOCKNAME}"
+unset DISPLAY
+if test -x "$1" || test -x "$(which ${1} 2>/dev/null)"; then
+    echo "Running: $@"
+    $@
+else
+    echo "Running: MiniBrowser >> ${url} $@"
+    CLIENT_IDENTIFIER="WebKitBrowser" FONTCONFIG_PATH="/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/etc/fonts" GIO_MODULE_DIR="/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/lib/gio/modules" GST_ENABLE_SVP="1" GST_GL_WINDOW="dummy" GST_PLUGIN_PATH="/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/lib/gstreamer-1.0" GST_PLUGIN_SCANNER="/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/libexec/gstreamer-1.0/gst-plugin-scanner" GST_REGISTRY="/home/laurence.ejraee/.cache/gstreamer-1.0/registry.x86_64.bin" JSC_dumpOptions="0" PATH="$PATH:/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/bin" QUEUEPLAYER_FLUSH_MODE="3" WEBKIT_EXEC_PATH="/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/bin" WPE_SHELL_COOKIE_STORAGE="1" CAIRO_GL_COMPOSITOR=noaa MSE_MAX_BUFFER_SIZE="audio:6m,video:45m,text:1m" WEBKIT_GST_EME_RANK_PRIORITY="Thunder" WPE_RAM_SIZE="${wpe_ram_size}" WPE_POLL_MAX_MEMORY="${wpe_poll_max_memory}" WPE_POLL_MAX_MEMORY_GPU="95m" WEBKIT_POST_CONNECTION_REUSE="1" WEBKIT_NICOSIA_PAINTING_THREADS="null" WEBKIT_RESOLUTION_HEIGHT="${height}" WEBKIT_RESOLUTION_WIDTH="${width}" WPE_SHELL_DISABLE_MEDIA_DISK_CACHE="1" WPE_DISK_CACHE_SIZE="0" WPE_DISABLE_XHR_RESPONSE_CACHING="1" WEBKIT_INJECTED_BUNDLE_PATH=WebKitBuild/Release/lib WEBKIT_INSPECTOR_RESOURCES_PATH=WebKitBuild/Release/lib WEBKIT_PREVENT_PROCESS_MEMORY_KILL="${prevent_process_memory_kill}" WEBKIT_INSPECTOR_HTTP_SERVER=127.0.0.1:8080 LD_LIBRARY_PATH=WebKitBuild/DependenciesWPE/Root/lib WebKitBuild/Release/bin/MiniBrowser ${url} $@
+fi
+
