@@ -11,6 +11,8 @@
       <dep package="gst-plugins-bad"/>
       <dep package="gst-libav"/>
       <dep package="gstreamer-vaapi"/>
+      <dep package="westeros-sink"/>
+      <dep package="westeros"/>
       <if condition-set="Thunder">
         <dep package="thunder"/>
         <dep package="widevine"/>
@@ -23,14 +25,20 @@
   <!-- Please use http/https to access repositories to be friendly to users stuck behind firewalls. -->
   <repository type="tarball" name="gstreamer"
       href="https://gstreamer.freedesktop.org/src/"/>
+  <repository type="git" name="github.com"
+      href="https://github.com"/>
   <repository type="tarball" name="github-tarball"
       href="https://github.com/"/>
   <repository type="git" name="github-ssh"
       href="git@github.com:"/>
+  <repository type="git" name="laurence.red"
+      href="git@gitlab.consult.red:laurence.ejraee/"/>
   <repository type="git" name="chromium.googlesource.com"
       href="https://chromium.googlesource.com/webm/"/>
   <repository type="git" name="aomedia.googlesource.com"
       href="https://aomedia.googlesource.com/"/>
+  <repository type="tarball" name="dri.freedesktop.org"
+      href="https://dri.freedesktop.org"/>
   <repository type="tarball" name="ffmpeg" href="https://ffmpeg.org/releases/"/>
   <repository type="tarball" name="ftp.gnome.org" href="http://ftp.gnome.org"/>
 
@@ -46,6 +54,54 @@
       <patch file="openh264-configure.patch" strip="0"/>
     </branch>
   </autotools>
+
+
+  <autotools id="westeros" autogen-sh="autoreconf" autogen-template="make -C %(srcdir)s/protocol SCANNER_TOOL=/usr/bin/wayland-scanner; make -C %(srcdir)s/linux-dmabuf/protocol SCANNER_TOOL=/usr/bin/wayland-scanner; %(srcdir)s/configure --prefix=/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root --enable-rendergl=yes --enable-sbprotocol=yes --enable-ldbprotocol=yes --enable-xdgv5=yes --enable-app=yes --enable-player=yes CXXFLAGS='-DWESTEROS_PLATFORM_DRM' LDFLAGS='-lpthread -lEGL -lGLESv2 -L/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Build/westeros/.libs -L/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/lib'">
+    <branch repo="laurence.red" module="westeros.git" tag="emulator-2.28">
+    </branch>
+    <dependencies>
+      <dep package="westeros-simpleshell"/>
+      <dep package="westeros-simplebuffer"/>
+      <dep package="westeros-soc"/>
+      <dep package="gstreamer"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="westeros-simpleshell" autogen-sh="autoreconf" autogen-template="make -C %(srcdir)s/protocol SCANNER_TOOL=/usr/bin/wayland-scanner; %(srcdir)s/configure --prefix=/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root">
+    <branch repo="github.com" module="rdkcmf/westeros.git" tag="23a65d1fa48f6d82d51c3cb6cd08bf403f95187d" subdir="simpleshell" checkoutdir="westeros-simpleshell">
+    </branch>
+  </autotools>
+
+  <autotools id="westeros-simplebuffer" autogen-sh="autoreconf" autogen-template="make -C %(srcdir)s/protocol SCANNER_TOOL=/usr/bin/wayland-scanner; %(srcdir)s/configure --prefix=/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root">
+    <branch repo="github.com" module="rdkcmf/westeros.git" tag="23a65d1fa48f6d82d51c3cb6cd08bf403f95187d" subdir="simplebuffer" checkoutdir="westeros-simplebuffer">
+    </branch>
+  </autotools>
+
+  <autotools id="westeros-soc" autogen-sh="autoreconf" autogen-template="make -C %(srcdir)s/protocol SCANNER_TOOL=/usr/bin/wayland-scanner; %(srcdir)s/configure --prefix=/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root --disable-silent-rules --disable-dependency-tracking">
+    <branch repo="github.com" module="rdkcmf/westeros.git" tag="23a65d1fa48f6d82d51c3cb6cd08bf403f95187d" subdir="drm" checkoutdir="westeros-soc">
+    </branch>
+    <dependencies>
+      <dep package="libdrm"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="westeros-sink" autogen-sh="autoreconf" autogen-template="ln -sf %(srcdir)s/../../westeros-sink/westeros-sink.c; ln -sf %(srcdir)s/../../westeros-sink/westeros-sink.h; %(srcdir)s/configure --prefix=/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root --disable-silent-rules --disable-dependency-tracking --enable-gstreamer1=yes CFLAGS='-x c++'">
+    <branch repo="github.com" module="rdkcmf/westeros.git" tag="23a65d1fa48f6d82d51c3cb6cd08bf403f95187d" subdir="v4l2/westeros-sink" checkoutdir="westeros-sink">
+    </branch>
+    <dependencies>
+      <dep package="westeros"/>
+      <dep package="gstreamer"/>
+    </dependencies>
+  </autotools>
+
+  <!--autotools id="libdrm" autogen-sh="configure">
+    <pkg-config>libdrm.pc</pkg-config>
+    <branch module="/libdrm/libdrm-${version}.tar.bz2" version="2.4.100"
+            repo="dri.freedesktop.org"
+            hash="sha256:c77cc828186c9ceec3e56ae202b43ee99eb932b4a87255038a80e8a1060d0a5d"/>
+  </autotools-->
+
+
 
   <!--cmake id="aom" cmakeargs="-DBUILD_SHARED_LIBS=1">
     <branch repo="aomedia.googlesource.com" module="aom" checkoutdir="aom" branch="master"
