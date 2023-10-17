@@ -210,9 +210,6 @@ public:
 #endif
 #endif
 
-    virtual bool shouldMaintainAspectRatio() const override { return m_shouldMaintainAspectRatio; };
-    virtual void setShouldMaintainAspectRatio(bool maintainAspect) override;
-
 #if ENABLE(ENCRYPTED_MEDIA)
     void cdmInstanceAttached(CDMInstance&) final;
     void cdmInstanceDetached(CDMInstance&) final;
@@ -389,7 +386,6 @@ protected:
     mutable FloatSize m_videoSize;
     bool m_isUsingFallbackVideoSink { false };
     bool m_canRenderingBeAccelerated { false };
-    bool m_shouldMaintainAspectRatio{ false }; // as per gstreamer's default
 
     bool m_isBeingDestroyed { false };
 
