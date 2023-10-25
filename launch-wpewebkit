@@ -2,9 +2,10 @@
 
 ###
 # Customizable Launch Options:
-#url="https://tv.iq.com/"
+url="https://tv.iq.com/"
 #url="http://127.0.0.1/testcases/mem-alloc/"
 #url="https://syok.stb-production.astro.com.my/syok.html?nav=main&page=dashboard"
+#url="https://hlsjs.video-dev.org/demo/basic-usage"
 width=1920
 height=1016
 wpe_ram_size="500m"
@@ -67,6 +68,6 @@ if test -x "$1" || test -x "$(which ${1} 2>/dev/null)"; then
     $@
 else
     echo "Running: MiniBrowser >> ${url} $@"
-    CLIENT_IDENTIFIER="WebKitBrowser" FONTCONFIG_PATH="/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/etc/fonts" GIO_MODULE_DIR="/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/lib/gio/modules" GST_ENABLE_SVP="1" GST_GL_WINDOW="dummy" GST_PLUGIN_PATH="/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/lib/gstreamer-1.0" GST_PLUGIN_SCANNER="/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/libexec/gstreamer-1.0/gst-plugin-scanner" GST_REGISTRY="/home/laurence.ejraee/.cache/gstreamer-1.0/registry.x86_64.bin" JSC_dumpOptions="0" PATH="$PATH:/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/bin" QUEUEPLAYER_FLUSH_MODE="3" WEBKIT_EXEC_PATH="/home/laurence.ejraee/wpewebkit/2.28/WPEWebKit/WebKitBuild/DependenciesWPE/Root/bin" WPE_SHELL_COOKIE_STORAGE="1" CAIRO_GL_COMPOSITOR=noaa MSE_MAX_BUFFER_SIZE="audio:6m,video:45m,text:1m" WEBKIT_GST_EME_RANK_PRIORITY="Thunder" WPE_RAM_SIZE="${wpe_ram_size}" WPE_POLL_MAX_MEMORY="${wpe_poll_max_memory}" WPE_POLL_MAX_MEMORY_GPU="95m" WEBKIT_POST_CONNECTION_REUSE="1" WEBKIT_NICOSIA_PAINTING_THREADS="null" WEBKIT_RESOLUTION_HEIGHT="${height}" WEBKIT_RESOLUTION_WIDTH="${width}" WPE_SHELL_DISABLE_MEDIA_DISK_CACHE="1" WPE_DISK_CACHE_SIZE="0" WPE_DISABLE_XHR_RESPONSE_CACHING="1" WEBKIT_INJECTED_BUNDLE_PATH=WebKitBuild/Release/lib WEBKIT_INSPECTOR_RESOURCES_PATH=WebKitBuild/Release/lib WEBKIT_PREVENT_PROCESS_MEMORY_KILL="${prevent_process_memory_kill}" WEBKIT_INSPECTOR_HTTP_SERVER=127.0.0.1:8080 LD_LIBRARY_PATH=WebKitBuild/DependenciesWPE/Root/lib WebKitBuild/Release/bin/MiniBrowser ${url} $@
+    CLIENT_IDENTIFIER="WebKitBrowser" FONTCONFIG_PATH="$PWD/WebKitBuild/DependenciesWPE/Root/etc/fonts" GIO_MODULE_DIR="$PWD/WebKitBuild/DependenciesWPE/Root/lib/gio/modules" GST_ENABLE_SVP="1" GST_GL_WINDOW="dummy" GST_PLUGIN_PATH="$PWD/WebKitBuild/DependenciesWPE/Root/lib/gstreamer-1.0" GST_PLUGIN_SCANNER="$PWD/WebKitBuild/DependenciesWPE/Root/libexec/gstreamer-1.0/gst-plugin-scanner" JSC_dumpOptions="0" PATH="$PATH:$PWD/WebKitBuild/DependenciesWPE/Root/bin" QUEUEPLAYER_FLUSH_MODE="3" WEBKIT_EXEC_PATH="$PWD/WebKitBuild/DependenciesWPE/Root/bin" WPE_SHELL_COOKIE_STORAGE="1" CAIRO_GL_COMPOSITOR=noaa MSE_MAX_BUFFER_SIZE="audio:6m,video:45m,text:1m" WEBKIT_GST_EME_RANK_PRIORITY="Thunder" WPE_RAM_SIZE="${wpe_ram_size}" WPE_POLL_MAX_MEMORY="${wpe_poll_max_memory}" WPE_POLL_MAX_MEMORY_GPU="95m" WEBKIT_POST_CONNECTION_REUSE="1" WEBKIT_NICOSIA_PAINTING_THREADS="null" WEBKIT_RESOLUTION_HEIGHT="${height}" WEBKIT_RESOLUTION_WIDTH="${width}" WPE_SHELL_DISABLE_MEDIA_DISK_CACHE="1" WPE_DISK_CACHE_SIZE="0" WPE_DISABLE_XHR_RESPONSE_CACHING="1" WEBKIT_INJECTED_BUNDLE_PATH=WebKitBuild/Release/lib WEBKIT_INSPECTOR_RESOURCES_PATH=WebKitBuild/Release/lib WEBKIT_PREVENT_PROCESS_MEMORY_KILL="${prevent_process_memory_kill}" WEBKIT_INSPECTOR_HTTP_SERVER=127.0.0.1:8080 LD_LIBRARY_PATH=WebKitBuild/DependenciesWPE/Root/lib:WebKitBuild/Release/lib WebKitBuild/Release/bin/MiniBrowser ${url} $@
 fi
 
