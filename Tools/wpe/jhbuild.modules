@@ -194,18 +194,18 @@
     <branch repo="gitlab.red" 
             module="ott-sidecar-integration-project/wpeframework-components/libwpe.git" 
             checkoutdir="libwpe" 
-            tag="5a4dec7efbf49511a0ec6f589337b2840144e799"/>
+            tag="emulator-1.14.0"/>
   </cmake>
 
-  <cmake id="wpebackend-fdo">
+  <meson id="wpebackend-fdo">
     <dependencies>
       <dep package="libwpe"/>
       <dep package="glib"/>
     </dependencies>
     <branch repo="gitlab.red" module="ott-sidecar-integration-project/wpeframework-components/wpebackend-fdo.git" 
             checkoutdir="wpebackend-fdo" 
-            tag="astro-2.28"/>
-  </cmake>
+            tag="astro-2.28-1.14.2"/>
+  </meson>
 
   <autotools id="libgpg-error" autogen-sh="autoreconf">
     <branch module="libgpg-error/libgpg-error-${version}.tar.bz2"
