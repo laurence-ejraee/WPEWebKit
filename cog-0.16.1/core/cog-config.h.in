@@ -1,0 +1,26 @@
+/*
+ * cog-config.h
+ * Copyright (C) 2021 Igalia S.L.
+ * Copyright (C) 2017-2018 Adrian Perez <aperez@igalia.com>
+ *
+ * Distributed under terms of the MIT license.
+ */
+
+#ifndef COG_CONFIG_H_IN
+#define COG_CONFIG_H_IN
+
+#define COG_MODULEDIR "@COG_MODULEDIR@"
+#define COG_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define COG_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define COG_VERSION_PATCH @PROJECT_VERSION_PATCH@
+#define COG_VERSION_STRING "@PROJECT_VERSION@"
+#define COG_VERSION_EXTRA "@COG_VERSION_EXTRA@"
+#define COG_DEFAULT_APPID "@COG_DEFAULT_APPID@"
+#define COG_DEFAULT_HOME_URI "@COG_DEFAULT_HOME_URI@"
+#define COG_HAVE_MEM_PRESSURE @HAVE_WEBKIT_MEM_PRESSURE_API@
+#define COG_ENABLE_GAMEPAD_MANETTE @ENABLE_GAMEPAD_MANETTE@
+
+/* FIXME: Perhaps make this a meson define instead. */
+#define COG_DEFAULT_APPNAME "Cog"
+
+#endif /* !COG_CONFIG_H_IN */

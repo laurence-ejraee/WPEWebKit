@@ -1,0 +1,112 @@
+---
+name: "Build - Native"
+on: [pull_request, push]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/pip
+            ~/WPEBackend-fdo
+            ~/libwpe
+          key: native-${{ runner.os }}-${{ hashFiles('.github/workflows/ci-native.yml') }}
+          restore-keys: native-${{ runner.os }}-
+      - name: Install Debian Packages
+        run: |
+          sudo apt update
+          sudo apt install -y ninja-build gobject-introspection \
+            libwpewebkit-1.0-dev libgles2-mesa-dev \
+            libgirepository1.0-dev gir1.2-glib-2.0 gir1.2-soup-2.4 \
+            libwayland-bin libwayland-dev wayland-protocols libepoxy-dev \
+            libdrm-dev libinput-dev libudev-dev libgbm-dev \
+            libxkbcommon-x11-dev libx11-xcb-dev
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install Python Packages
+        run: |
+          pip install --upgrade pip gi-docgen==2021.6 meson==0.55
+      - name: Fetch libwpe
+        run: |
+          if [[ -d ~/libwpe/.git ]] ; then
+            echo 'Updating libwpe clone...'
+            cd ~/libwpe/
+            git reset --hard
+            git clean -qxdff
+            git checkout -f master
+            git pull -q
+          else
+            echo 'Cloning libwpe afresh...'
+            rm -rf ~/libwpe/
+            git clone -q https://github.com/WebPlatformForEmbedded/libwpe ~/libwpe/
+          fi
+      - name: Fetch WPEBackend-fdo
+        run: |
+          if [[ -d ~/WPEBackend-fdo/.git ]] ; then
+            echo 'Updating WPEBackend-fdo clone...'
+            cd ~/WPEBackend-fdo/
+            git reset --hard
+            git clean -qxdff
+            git checkout -f master
+            git pull -q
+          else
+            echo 'Cloning WPEBackend-fdo afresh...'
+            rm -rf ~/WPEBackend-fdo/
+            git clone -q https://github.com/Igalia/WPEBackend-fdo ~/WPEBackend-fdo
+          fi
+      - name: Build and Install libwpe
+        env:
+          TERM: dumb
+        run: |
+          meson --prefix ~/prefix --libdir ~/prefix/lib \
+            ~/libwpe-build ~/libwpe
+          ninja -C ~/libwpe-build install
+      - name: Build and Install WPEBackend-fdo
+        env:
+          TERM: dumb
+        run: |
+          export PKG_CONFIG_PATH=${HOME}/prefix/lib/pkgconfig/
+          meson --prefix ~/prefix --libdir ~/prefix/lib \
+            ~/WPEBackend-fdo-build ~/WPEBackend-fdo
+          ninja -C ~/WPEBackend-fdo-build install
+      - name: Configure
+        run: |
+          export PKG_CONFIG_PATH=${HOME}/prefix/lib/pkgconfig/
+          meson --prefix ~/prefix --libdir ~/prefix/lib \
+            ~/build "${GITHUB_WORKSPACE}" \
+            -Dplatforms=drm,headless,wayland,x11 \
+            -Dprograms=true \
+            -Ddocumentation=true \
+            -Dmanpages=true
+      - name: Build
+        env:
+          TERM: dumb
+        run:
+          ninja -C ~/build/
+      - name: Archive Documentation
+        uses: actions/upload-artifact@v2
+        with:
+          name: docs
+          path: ~/build/docs/html
+  publish:
+    if: ${{ github.ref == 'refs/heads/master' }}
+    needs: build
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Fetch Documentation
+        uses: actions/download-artifact@v2
+        with:
+          name: docs
+          path: html
+      - name: Deploy Documentation
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: html
