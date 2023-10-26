@@ -58,8 +58,10 @@ function installDependenciesWithApt {
         automake \
         autopoint \
         autotools-dev \
+        bison \
         bubblewrap \
         cmake \
+        flex \
         g++ \
         gawk \
         gcc \
@@ -68,6 +70,8 @@ function installDependenciesWithApt {
         intltool \
         itstool \
         libasound2-dev \
+        libdrm-dev \
+        libepoxy-dev \
         libevent-dev \
         libgbm-dev \
         libgnutls28-dev \
@@ -84,6 +88,7 @@ function installDependenciesWithApt {
         libsystemd-dev \
         libtasn1-6-dev \
         libtool \
+        libudev-dev \
         libwebp-dev \
         libwoff-dev \
         libxml2-dev \
