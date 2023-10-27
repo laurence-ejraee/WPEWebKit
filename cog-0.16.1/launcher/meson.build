@@ -2,7 +2,7 @@ executable('cog',
     'cog.c',
     'cog-launcher.c',
     c_args: ['-DG_LOG_DOMAIN="Cog"'],
-    dependencies: cogcore_dep,
+    dependencies: [cogcore_dep, icu_dep, cairo_dep],
     install: true,
 )
 executable('cogctl',

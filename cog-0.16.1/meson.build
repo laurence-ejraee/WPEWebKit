@@ -145,6 +145,8 @@ endif
 
 wpe_dep = dependency('wpe-1.0')
 manette_dep = dependency('manette-0.2', version: '>=0.2.4', required: false)
+icu_dep = dependency('icu-i18n')
+cairo_dep = dependency('cairo')
 
 subdir('core')
 
