@@ -152,7 +152,13 @@ function installDependenciesWithApt {
     packages="$packages \
         git-svn \
         subversion"
-
+    
+    # These are dependencies necessary for building Cog.
+    packages=" \
+        meson \
+        libinput-dev \
+        wayland-protocols"
+    
     apt-get install $packages
 }
 
