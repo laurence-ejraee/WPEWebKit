@@ -154,7 +154,7 @@ function installDependenciesWithApt {
         subversion"
     
     # These are dependencies necessary for building Cog.
-    packages=" \
+    packages="$packages \
         meson \
         libinput-dev \
         wayland-protocols"
