@@ -68,6 +68,11 @@ public:
 
 #if OS(LINUX)
     WTF_EXPORT_PRIVATE void triggerMemoryPressureEvent(bool isCritical, bool isSynchronous);
+    WTF_EXPORT_PRIVATE const char* getInitialGFX();
+    WTF_EXPORT_PRIVATE size_t GetUsedGpuRam();
+    WTF_EXPORT_PRIVATE int GetUsedGpuPercent();
+    bool GetUsedWebProcMem(size_t& value);
+    bool GetUsedWebProcPercent(int& percent);
 #endif
 
     void setMemoryKillCallback(WTF::Function<void()>&& function) { m_memoryKillCallback = WTFMove(function); }

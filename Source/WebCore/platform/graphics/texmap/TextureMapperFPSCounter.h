@@ -31,18 +31,33 @@ namespace WebCore {
 class TextureMapper;
 
 class TextureMapperFPSCounter {
-    WTF_MAKE_NONCOPYABLE(TextureMapperFPSCounter);
+    // WTF_MAKE_NONCOPYABLE(TextureMapperFPSCounter);
     WTF_MAKE_FAST_ALLOCATED;
+    friend class WTF::NeverDestroyed<TextureMapperFPSCounter>;
 public:
-    WEBCORE_EXPORT TextureMapperFPSCounter();
+    WTF_EXPORT_PRIVATE static TextureMapperFPSCounter& singleton();
+    // WEBCORE_EXPORT TextureMapperFPSCounter();
     WEBCORE_EXPORT void updateFPSAndDisplay(TextureMapper&, const FloatPoint& = FloatPoint::zero(), const TransformationMatrix& = TransformationMatrix());
+    WEBCORE_EXPORT void updateMemAndDisplay(TextureMapper&, const FloatPoint& = FloatPoint::zero(), const TransformationMatrix& = TransformationMatrix());
+    WEBCORE_EXPORT void updateLayersMem(int);
 
 private:
+    TextureMapperFPSCounter();
+
     bool m_isShowingFPS;
     Seconds m_fpsInterval;
     MonotonicTime m_fpsTimestamp;
     int m_lastFPS;
     int m_frameCount;
+
+    bool m_isShowingMem;
+    Seconds m_memInterval;
+    MonotonicTime m_memTimestamp;
+    int m_lastGfxMem;
+    int m_lastGfxPercent;
+    int m_layersMem;
+    int m_lastProcMem;
+    int m_lastProcPercent;
 };
 
 } // namespace WebCore

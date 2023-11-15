@@ -37,6 +37,8 @@
 #include <atk/atk.h>
 #endif
 
+#include <wtf/MemoryPressureHandler.h>
+
 static const char** uriArguments;
 static const char** ignoreHosts;
 static gboolean headlessMode;
@@ -196,6 +198,13 @@ static WebKitWebView* createWebView(WebKitWebView* webView, WebKitNavigationActi
 
 int main(int argc, char *argv[])
 {
+    g_setenv("WEBKIT_INITIAL_GFX_VALUE", "200", FALSE);
+#if OS(LINUX)
+    auto& memoryPressureHandler = MemoryPressureHandler::singleton();
+    const char* value = memoryPressureHandler.getInitialGFX();
+    //g_setenv("WEBKIT_INITIAL_GFX_VALUE", value, FALSE);
+#endif
+
 #if ENABLE_DEVELOPER_MODE
     g_setenv("WEBKIT_INJECTED_BUNDLE_PATH", WEBKIT_INJECTED_BUNDLE_PATH, FALSE);
 #endif

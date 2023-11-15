@@ -192,6 +192,13 @@ void MemoryPressureHandler::setMemoryUsagePolicyBasedOnFootprint(size_t footprin
 
 void MemoryPressureHandler::measurementTimerFired()
 {
+#if OS(LINUX)
+    auto& memoryPressureHandler = MemoryPressureHandler::singleton();
+
+    size_t footprintGFX = memoryPressureHandler.GetUsedGpuRam();
+    RELEASE_LOG(MemoryPressure, "Current GFX memory usage: %zu MB", footprintGFX / MB);
+#endif
+
     size_t footprint = memoryFootprint();
     RELEASE_LOG(MemoryPressure, "Current memory footprint: %zu MB", footprint / MB);
     if (footprint >= thresholdForMemoryKill()) {

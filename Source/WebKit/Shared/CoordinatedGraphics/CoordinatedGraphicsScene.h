@@ -76,6 +76,9 @@ public:
 
     void applyStateChangesAndNotifyVideoPosition(const Vector<WebCore::CoordinatedGraphicsState>&);
 
+    // void pollMemDisplay(const FloatPoint&, const TransformationMatrix&);
+    // void pollMemDisplay(TextureMapper::PaintFlags, const FloatRect&, const TransformationMatrix&);
+
 private:
     void commitSceneState(const WebCore::CoordinatedGraphicsState::NicosiaState&);
     void updateSceneState();
@@ -99,11 +102,13 @@ private:
     CoordinatedGraphicsSceneClient* m_client;
     bool m_isActive { false };
 
+    bool m_polling { false };
+
     std::unique_ptr<WebCore::TextureMapperLayer> m_rootLayer;
 
     Nicosia::PlatformLayer::LayerID m_rootLayerID { 0 };
 
-    WebCore::TextureMapperFPSCounter m_fpsCounter;
+    // WebCore::TextureMapperFPSCounter m_fpsCounter;
 };
 
 } // namespace WebKit

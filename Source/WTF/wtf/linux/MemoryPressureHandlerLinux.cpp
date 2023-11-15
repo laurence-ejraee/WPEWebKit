@@ -59,10 +59,13 @@ static size_t s_pollMaximumProcessMemoryCriticalLimit = 0;
 static size_t s_pollMaximumProcessMemoryNonCriticalLimit = 0;
 static size_t s_pollMaximumProcessGPUMemoryCriticalLimit = 0;
 static size_t s_pollMaximumProcessGPUMemoryNonCriticalLimit = 0;
+static size_t s_initialGPUMemory = 0;
+static const Seconds s_gfxPopupInterval { 60_s };
+static MonotonicTime s_lastGFXPopupTime = MonotonicTime::nan();
 
 static const char* s_processStatus = "/proc/self/status";
 static const char* s_cmdline = "/proc/self/cmdline";
-static const char* s_GPUMemoryUsedFile = "/proc/brcm/core";
+static const char* s_GPUMemoryUsedFile = "/sys/bus/pci/drivers/vmwgfx/0000:00:02.0/memory_accounting/kernel/used_memory";
 
 static inline String nextToken(FILE* file)
 {
@@ -113,75 +116,48 @@ bool readToken(const char* filename, const char* key, size_t fileUnits, size_t &
     return validValue;
 }
 
-// Parse GPU memory value from broadcom file
-bool parse_proc_brcm_core(const char* columnHeader, size_t &result)
+// Read GPU memory value (KB) from Ubuntu VM vmwgfx kernel driver file
+bool read_vmwgfx_used_memory(size_t &value)
 {
     FILE* file = fopen(s_GPUMemoryUsedFile, "r");
     if (!file)
         return false;
-    
-    unsigned int index = 0; // Current token
-    unsigned int columnI = 0; // Index of column header
-    unsigned int nameI = 0; // Index of name column
-    unsigned int gfxI = 0; // Index of GFX token
 
-    bool validValue = false;
-    String token;
-    Vector<String> tokens;
-    do {
-        token = nextToken(file);
-        tokens.append(token);
-        if (token.isEmpty())
-            break;
-        
-        if (!columnHeader)
-            break;
-        
-        if(token == "name")
-            nameI = index;
+    bool success = false;
 
-        if (token == columnHeader)
-            columnI = index;
-
-        if (token.contains("GFX")) {
-            gfxI = index;
-            break;
-        }
-        index++; // Next token
-    } while (!token.isEmpty());
-
-    // Column headers or GFX data not found
-    if(!columnI || !gfxI || !nameI)
-        return false;
-    
-    int valI = gfxI - (nameI - columnI); // Index of the mem value for said column
-    result = tokens.at(valI).toUInt64(&validValue);
-
+    value = nextToken(file).toUInt64(&success);
     fclose(file);
-    return validValue;
+
+    return success;
 }
 
-// Total GPU mem in bytes from /proc/brcm/core
-size_t GetTotalGpuRam()
+// Used GPU mem in bytes from s_GPUMemoryUsedFile
+// Get actually amount used by comparing with the initial GFX value before launch.
+size_t MemoryPressureHandler::GetUsedGpuRam()
 {
     size_t value = 0;
-    if(parse_proc_brcm_core("MB", value))
+    if (read_vmwgfx_used_memory(value))
     {
-        value *= 1024 * 1024; // Convert MB to bytes
+        value = value - s_initialGPUMemory; // Subtract gfx mem that was in use before launch
+        value *= 1024; // Convert KB to bytes for comparison to gpu limit vars
+        // WTFLogAlways("MemoryPressureHandler: used value bytes = %lu", value);  // TODO REMOVE
+    }
+    else {
+        WTFLogAlways("MemoryPressureHandler: FAILED to read the GFX memory usage from: %s", s_GPUMemoryUsedFile);
     }
     return value;
 }
 
-// Used GPU mem in bytes from /proc/brcm/core percentage
-size_t GetUsedGpuRam()
+// Used GPU mem converted to a percentage of the limit set by WPE_POLL_MAX_MEMORY_GPU
+int MemoryPressureHandler::GetUsedGpuPercent()
 {
-    size_t value = 0;
-    if(parse_proc_brcm_core("used", value))
-    {
-        size_t total = GetTotalGpuRam();
-        value = value * 0.01 * total; // Convert percent for used mem
-    }
-    return value;
+    int percent = 0;
+    size_t value = GetUsedGpuRam(); // MemoryPressureHandler::singleton().GetUsedGpuRam();
+
+    if (value && s_pollMaximumProcessGPUMemoryCriticalLimit)
+        percent = (int) ((double)value / s_pollMaximumProcessGPUMemoryCriticalLimit * 100);
+
+    return percent;
 }
 
 static String getProcessName()
@@ -196,6 +172,40 @@ static String getProcessName()
     return result;
 }
 
+
+// Used WebProcess mem in bytes
+bool MemoryPressureHandler::GetUsedWebProcMem(size_t& value)
+{
+    // Method applies only to the WebProcess
+    if (fnmatch("*WPEWebProcess", getProcessName().utf8().data(), 0))
+        return false;
+    
+    value = 0;
+    readToken(s_processStatus, "VmRSS:", KB, value);
+    return true;
+}
+
+// Used WebProcess mem as a percentage of s_pollMaximumProcessMemoryCriticalLimit
+bool MemoryPressureHandler::GetUsedWebProcPercent(int& percent)
+{
+    // Method applies only to the WebProcess
+    if (fnmatch("*WPEWebProcess", getProcessName().utf8().data(), 0))
+        return false;
+    
+    percent = 0;
+    size_t value = 0;
+    size_t value_swap = 0;
+
+    if (s_pollMaximumProcessMemoryCriticalLimit) {
+        if (readToken(s_processStatus, "VmRSS:", KB, value) && readToken(s_processStatus, "VmSwap:", KB, value_swap)) {
+            value += value_swap;
+            percent = (int) ((double)value / s_pollMaximumProcessMemoryCriticalLimit * 100);
+        }
+    }
+    return true;
+}
+
+// Initialises the process memory limit vars in bytes
 static bool initializeProcessMemoryLimits(size_t &criticalLimit, size_t &nonCriticalLimit)
 {
     static bool initialized = false;
@@ -243,6 +253,7 @@ static bool initializeProcessMemoryLimits(size_t &criticalLimit, size_t &nonCrit
     return false;
 }
 
+// Initialises the gpu memory limit vars in bytes
 static bool initializeProcessGPUMemoryLimits(size_t &criticalLimit, size_t &nonCriticalLimit)
 {
     static bool initialized = false;
@@ -263,6 +274,18 @@ static bool initializeProcessGPUMemoryLimits(size_t &criticalLimit, size_t &nonC
     // Ensure that the limit is defined.
     if (!getenv("WPE_POLL_MAX_MEMORY_GPU"))
         return false;
+    
+    bool ok = false;
+    if (getenv("WEBKIT_INITIAL_GFX_VALUE")) {
+        String initial(getenv("WEBKIT_INITIAL_GFX_VALUE"));
+        String initialGFX = initial.stripWhiteSpace().convertToLowercaseWithoutLocale();
+        size_t initialGFXsize = size_t(initialGFX.toUInt64(&ok));
+
+        if (!ok)
+            WTFLogAlways("MemoryPressureHandler: ERROR Failed to read the initial GFX memory at launch! This should be done by launch-wpewebkit script");
+        
+        s_initialGPUMemory = initialGFXsize;
+    }
 
     String s(getenv("WPE_POLL_MAX_MEMORY_GPU"));
     String value = s.stripWhiteSpace().convertToLowercaseWithoutLocale();
@@ -273,7 +296,7 @@ static bool initializeProcessGPUMemoryLimits(size_t &criticalLimit, size_t &nonC
         units = 1024 * 1024;
     if (units != 1)
         value = value.substring(0, value.length()-1);
-    bool ok = false;
+    ok = false;
     size_t size = size_t(value.toUInt64(&ok));
 
     // Ensure that the string can be converted to size_t.
@@ -282,6 +305,8 @@ static bool initializeProcessGPUMemoryLimits(size_t &criticalLimit, size_t &nonC
 
     criticalLimit = size * units;
     nonCriticalLimit = criticalLimit * 0.95;
+
+    WTFLogAlways("MemoryPressureHandler: criticalLimit = %lu", criticalLimit);
 
     success = true;
     return true;
@@ -327,18 +352,27 @@ MemoryPressureHandler::MemoryUsagePoller::MemoryUsagePoller()
                         underMemoryPressure = true;
                         critical = value + value_swap > s_pollMaximumProcessMemoryCriticalLimit;
                         synchronous = value + value_swap > s_pollMaximumProcessMemoryCriticalLimit * 1.05;
-                        WTFLogAlways("MemoryPressureHandler: PROCESS Memory under pressure! %uMB %s", value/MB, critical ? "critical" : "non-critical");
+                        WTFLogAlways("MemoryPressureHandler: PROCESS Memory under pressure! %luMB (%s)", value/MB, critical ? "critical" : "non-critical");
                     }
                 }
             }
 
             if (s_pollMaximumProcessGPUMemoryCriticalLimit) {
-                size_t value = GetUsedGpuRam();
+                size_t value = MemoryPressureHandler::singleton().GetUsedGpuRam();
                 if (value) {
                     if (value > s_pollMaximumProcessGPUMemoryNonCriticalLimit) {
                         //underMemoryPressure = true;
                         gpuCritical = value > s_pollMaximumProcessGPUMemoryCriticalLimit;
-                        WTFLogAlways("MemoryPressureHandler: GPU Memory under pressure! (%s)", gpuCritical ? "critical" : "non-critical");
+                        WTFLogAlways("GPU Memory under pressure! %luMB %d%% (%s)", value/MB, (int) ((double)value / s_pollMaximumProcessGPUMemoryCriticalLimit * 100), gpuCritical ? "critical" : "non-critical");
+
+                        char msg[256];
+                        sprintf(msg, "/usr/bin/notify-send MemoryPressureHandler \"GPU Memory under pressure! %luMB %d%% (%s) %s", value/MB, (int) ((double)value / s_pollMaximumProcessGPUMemoryCriticalLimit * 100), gpuCritical ? "critical" : "non-critical", "\"");
+                        // Only show GFX warning popup every minute
+                        MonotonicTime currentTime = MonotonicTime::now();
+                        if (std::isnan(s_lastGFXPopupTime) || (currentTime >= (s_lastGFXPopupTime + s_gfxPopupInterval))) {
+                            s_lastGFXPopupTime = currentTime;
+                            system(msg);
+                        }
                     }
                 }
             }
@@ -364,6 +398,18 @@ MemoryPressureHandler::MemoryUsagePoller::~MemoryUsagePoller()
 }
 
 
+
+const char* MemoryPressureHandler::getInitialGFX()
+{
+    FILE* file = fopen(s_GPUMemoryUsedFile, "r");
+    if (!file)
+        return "";
+
+    const char* value = nextToken(file).utf8().data();
+    fclose(file);
+    
+    return value;
+}
 
 void MemoryPressureHandler::triggerMemoryPressureEvent(bool isCritical, bool isSynchronous)
 {

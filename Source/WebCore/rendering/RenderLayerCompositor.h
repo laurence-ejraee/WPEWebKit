@@ -155,6 +155,8 @@ public:
     explicit RenderLayerCompositor(RenderView&);
     virtual ~RenderLayerCompositor();
 
+    // double getLayersMemoryUsage() { return m_layersBackingStoreBytes; }
+
     // Return true if this RenderView is in "compositing mode" (i.e. has one or more
     // composited RenderLayers)
     bool usesCompositing() const { return m_compositing; }

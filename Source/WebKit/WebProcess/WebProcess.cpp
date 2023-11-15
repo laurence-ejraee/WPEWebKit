@@ -317,6 +317,11 @@ void WebProcess::initializeWebProcess(WebProcessCreationParameters&& parameters)
     m_suppressMemoryPressureHandler = parameters.shouldSuppressMemoryPressureHandler;
     if (!m_suppressMemoryPressureHandler) {
         auto& memoryPressureHandler = MemoryPressureHandler::singleton();
+
+#if OS(LINUX)
+        setenv("WEBKIT_INITIAL_GFX_VALUE", memoryPressureHandler.getInitialGFX(), FALSE);
+#endif
+
         memoryPressureHandler.setLowMemoryHandler([this] (Critical critical, Synchronous synchronous) {
 #if PLATFORM(MAC)
             // If this is a process we keep around for performance, kill it on memory pressure instead of trying to free up its memory.

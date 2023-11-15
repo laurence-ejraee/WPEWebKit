@@ -315,6 +315,71 @@ void TextureMapperGL::drawNumber(int number, const Color& color, const FloatPoin
 #endif
 }
 
+void TextureMapperGL::drawText(String text, const Color& color, const Color& textColor, const FloatPoint& targetPoint, const TransformationMatrix& modelViewMatrix)
+{
+    int pointSize = 8;
+
+#if USE(CAIRO)
+    CString counterString = String(text).ascii();
+    // cairo_text_extents() requires a cairo_t, so dimensions need to be guesstimated.
+    // int width = counterString.length() * pointSize * 1.2;
+    int width = 100;
+    int height = pointSize * 1.5;
+
+    cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    cairo_t* cr = cairo_create(surface);
+
+    // Since we won't swap R+B when uploading a texture, paint with the swapped R+B color.
+    if (color.isExtended())
+        cairo_set_source_rgba(cr, color.asExtended().blue(), color.asExtended().green(), color.asExtended().red(), color.asExtended().alpha());
+    else {
+        float r, g, b, a;
+        color.getRGBA(r, g, b, a);
+        cairo_set_source_rgba(cr, b, g, r, a);
+    }
+
+    cairo_rectangle(cr, 0, 0, width, height);
+    cairo_fill(cr);
+
+    cairo_select_font_face(cr, "Monospace", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(cr, pointSize);
+
+    // Text color:
+    // Since we won't swap R+B when uploading a texture, paint with the swapped R+B color.
+    if (textColor.isExtended())
+        cairo_set_source_rgba(cr, textColor.asExtended().blue(), textColor.asExtended().green(), textColor.asExtended().red(), textColor.asExtended().alpha());
+    else {
+        float r, g, b, a;
+        textColor.getRGBA(r, g, b, a);
+        cairo_set_source_rgba(cr, b, g, r, a);
+    }
+    // cairo_set_source_rgb(cr, 0, 0, 0); // Text color
+
+    cairo_move_to(cr, 2, pointSize);
+    cairo_show_text(cr, counterString.data());
+
+    IntSize size(width, height);
+    IntRect sourceRect(IntPoint::zero(), size);
+    IntRect targetRect(roundedIntPoint(targetPoint), size);
+
+    RefPtr<BitmapTexture> texture = acquireTextureFromPool(size);
+    const unsigned char* bits = cairo_image_surface_get_data(surface);
+    int stride = cairo_image_surface_get_stride(surface);
+    static_cast<BitmapTextureGL*>(texture.get())->updateContents(bits, sourceRect, IntPoint::zero(), stride);
+    drawTexture(*texture, targetRect, modelViewMatrix, 1.0f, AllEdges);
+
+    cairo_surface_destroy(surface);
+    cairo_destroy(cr);
+
+#else
+    UNUSED_PARAM(text);
+    UNUSED_PARAM(pointSize);
+    UNUSED_PARAM(targetPoint);
+    UNUSED_PARAM(modelViewMatrix);
+    notImplemented();
+#endif
+}
+
 static TextureMapperShaderProgram::Options optionsForFilterType(FilterOperation::OperationType type, unsigned pass)
 {
     switch (type) {

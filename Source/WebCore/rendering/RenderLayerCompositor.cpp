@@ -73,6 +73,8 @@
 #include <wtf/text/StringConcatenateNumbers.h>
 #include <wtf/text/TextStream.h>
 
+#include <TextureMapperFPSCounter.h>
+
 #if PLATFORM(IOS_FAMILY)
 #include "LegacyTileCache.h"
 #include "RenderScrollbar.h"
@@ -828,9 +830,19 @@ bool RenderLayerCompositor::updateCompositingLayers(CompositingUpdateType update
             m_rootContentsLayer->setChildren(WTFMove(childList));
     }
 
+    // laurence.ejraee warning when STB GFX might be too high based on layers memory
+    if (m_layersBackingStoreBytes/MB > 100 && m_contentLayersCount > 1) {
+        WTFLogAlways("WARNING: Layers memory is high! (%fMB) Black boxes might be seen on STB due to high GFX usage", m_layersBackingStoreBytes/MB);
+        char msg[256];
+        sprintf(msg, "/usr/bin/notify-send \"High layers memory\" \"(%dMB) Black boxes might be seen on STB due to high GFX usage %s", (int) (m_layersBackingStoreBytes/MB), "\"");
+        system(msg);
+    }
+
+
 #if !LOG_DISABLED
     if (compositingLogEnabled()) {
         MonotonicTime endTime = MonotonicTime::now();
+
         LOG(Compositing, "Total layers   primary   secondary   obligatory backing (KB)   secondary backing(KB)   total backing (KB)  update time (ms)\n");
 
         LOG(Compositing, "%8d %11d %9d %20.2f %22.2f %22.2f %18.2f\n",
@@ -1264,12 +1276,10 @@ void RenderLayerCompositor::updateBackingAndHierarchy(RenderLayer& layer, Vector
 
         // laurence.ejraee Emulator warning when STB GFX might be too high based on layers memory
         RequiresCompositingData queryData;
-        if (requiresCompositingLayer(layer, queryData) || layer.isRenderViewLayer())
+        if (requiresCompositingLayer(layer, queryData) || layer.isRenderViewLayer()) {
             m_layersBackingStoreBytes += layerBacking->backingStoreMemoryEstimate();
-        
-        if (m_layersBackingStoreBytes/MB > 100 && m_contentLayersCount > 1)
-            WTFLogAlways("WARNING: Layers memory is high! (%fMB) Black boxes might be seen on STB due to high GFX usage", m_layersBackingStoreBytes/MB);
-
+            TextureMapperFPSCounter::singleton().updateLayersMem((int) (m_layersBackingStoreBytes / MB));
+        }
 
 #if !LOG_DISABLED
         logLayerInfo(layer, "updateBackingAndHierarchy", traversalState.depth);

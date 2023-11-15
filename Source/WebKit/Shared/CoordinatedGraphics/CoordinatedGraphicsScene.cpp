@@ -78,7 +78,10 @@ void CoordinatedGraphicsScene::paintToCurrentGLContext(const TransformationMatri
         currentRootLayer->setTransform(matrix);
 
     currentRootLayer->paint();
-    m_fpsCounter.updateFPSAndDisplay(*m_textureMapper, clipRect.location(), matrix);
+    // m_fpsCounter.updateFPSAndDisplay(*m_textureMapper, clipRect.location(), matrix);
+    // m_fpsCounter.updateMemAndDisplay(*m_textureMapper, clipRect.location(), matrix);
+    TextureMapperFPSCounter::singleton().updateFPSAndDisplay(*m_textureMapper, clipRect.location(), matrix);
+    TextureMapperFPSCounter::singleton().updateMemAndDisplay(*m_textureMapper, clipRect.location(), matrix);
     m_textureMapper->endClip();
     m_textureMapper->endPainting();
 
