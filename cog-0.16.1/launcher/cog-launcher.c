@@ -1316,7 +1316,12 @@ cog_launcher_class_init(CogLauncherClass *klass)
 static void
 cog_launcher_init(CogLauncher *self)
 {
-    self->web_settings = g_object_ref_sink(webkit_settings_new());
+    // laurence.ejraee Allow mixed content disable CORS
+    self->web_settings = g_object_ref_sink(webkit_settings_new_with_settings(
+        "enable-websecurity", FALSE,
+        "allow-running-of-insecure-content", TRUE,
+        "allow-display-of-insecure-content", TRUE,
+        NULL));
 
 #if COG_HAVE_MEM_PRESSURE
     self->web_mem_settings = webkit_memory_pressure_settings_new();
