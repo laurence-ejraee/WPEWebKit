@@ -102,8 +102,6 @@ private:
     std::unique_ptr<WebCore::TextureMapperLayer> m_rootLayer;
 
     Nicosia::PlatformLayer::LayerID m_rootLayerID { 0 };
-
-    WebCore::TextureMapperFPSCounter m_fpsCounter;
 };
 
 } // namespace WebKit
