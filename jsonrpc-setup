@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e # Stop script if any command fails
+
+# Create the jsonrpc file
+sudo touch /var/www/html/jsonrpc
+sudo chown $USER:$USER /var/www/html/jsonrpc
+cat > /var/www/html/jsonrpc << EOF
+{
+    "jsonrpc":"2.0",
+    "result": {
+        "deviceID":"1660213282",
+        "deviceType":"149-238-96",
+        "householdId":"0",
+        "smartCardNumberEx":"016602132827",
+        "deviceSerialNumber":"PFH2EB2120000139",
+        "caStbId":"3838226656111112"
+    }
+}
+EOF
+
+# Open port 11111 for access
+# Insert these lines if not already found
+grep -xF 'Listen 11111' /etc/apache2/ports.conf || sudo sed -i '/Listen 80/a Listen 11111' /etc/apache2/ports.conf
+grep -F '*:11111' /etc/apache2/sites-enabled/000-default.conf || sudo sed -i 's/\*:80/\*:80 \*:11111/' /etc/apache2/sites-enabled/000-default.conf
+sudo systemctl restart apache2 #SystemD
+sudo service apache2 restart #SysVInit
