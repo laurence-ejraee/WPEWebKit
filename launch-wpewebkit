@@ -3,8 +3,9 @@
 ###
 # Customizable Launch Options:
 #url="https://hlsjs.video-dev.org/demo/basic-usage"
-width=1820
-height=916
+# ONLY use 1920x1080 or 1280x720:
+width=1280
+height=720
 wpe_ram_size="500m"
 wpe_poll_max_memory="databaseprocess:30m,networkprocess:80m,webprocess:250m,rpcprocess:20"
 prevent_process_memory_kill="0"
