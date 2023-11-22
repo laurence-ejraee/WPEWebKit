@@ -1276,10 +1276,8 @@ void RenderLayerCompositor::updateBackingAndHierarchy(RenderLayer& layer, Vector
 
         // laurence.ejraee Emulator warning when STB GFX might be too high based on layers memory
         RequiresCompositingData queryData;
-        if (requiresCompositingLayer(layer, queryData) || layer.isRenderViewLayer()) {
-            m_layersBackingStoreBytes += layerBacking->backingStoreMemoryEstimate();
-            TextureMapperFPSCounter::singleton().updateLayersMem((int) (m_layersBackingStoreBytes / MB));
-        }
+        m_layersBackingStoreBytes += layerBacking->backingStoreMemoryEstimate();
+        TextureMapperFPSCounter::singleton().updateLayersMem((int) (m_layersBackingStoreBytes / MB));
 
 #if !LOG_DISABLED
         logLayerInfo(layer, "updateBackingAndHierarchy", traversalState.depth);
