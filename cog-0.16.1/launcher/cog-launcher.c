@@ -305,6 +305,15 @@ cog_launcher_create_view(CogLauncher *self, CogShell *shell)
             g_error("'%s' doesn't represent a valid #RRGGBBAA or CSS color format.", s_options.background_color);
     }
 
+    gchar* cookieDatabasePath;
+    cookieDatabasePath = g_build_filename(
+        webkit_website_data_manager_get_base_data_directory(self->web_data_manager), "cookies.db", NULL);
+
+    auto* cookieManager = webkit_web_context_get_cookie_manager(web_context);
+    webkit_cookie_manager_set_persistent_storage(cookieManager, cookieDatabasePath, WEBKIT_COOKIE_PERSISTENT_STORAGE_SQLITE);
+
+
+
     switch (s_options.on_failure.action_id) {
     case WEBPROCESS_FAIL_ERROR_PAGE:
         // Nothing else needed, the default error handler (connected
