@@ -14,6 +14,13 @@ debug_level=""
 
 ###
 
+# Just show help options if --help passed
+if [[ "$@" == *"--help"* ]]
+then
+  LD_LIBRARY_PATH=WebKitBuild/install/lib/x86_64-linux-gnu:WebKitBuild/DependenciesWPE/Root/lib:WebKitBuild/install/lib COG_MODULEDIR=$PWD/WebKitBuild/install/lib/x86_64-linux-gnu/cog/modules ./WebKitBuild/install/bin/cog -P wl ${url} $@
+  exit 0
+fi
+
 # Restart display graphics to free gfx memory to get accurate initial value
 wmctrl -k on
 killall --wait -3 gnome-shell
