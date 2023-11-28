@@ -1,12 +1,31 @@
 #!/bin/bash
 set -e # Stop script if any command fails
 
+if [[ "$@" == *"--help"* ]]
+then
+  printf "Usage: `basename $0` [OPTIONS]\n"
+  printf "\nThis script can be used to build the entire emulator for first-time setup, or rebuild wpewebkit and cog when changes have been made to wpewebkit source.\n"
+  printf "\nCore options:\n\n  --full        For first-time build: this runs all build scripts needed to install system libs, build dependency packages, and build wpewebkit and cog.\n"
+  exit 0
+fi
+
+if [[ "$1" == "--full" ]]
+then
+  printf "Doing FULL build\n"
+  printf "\n$ Tools/wpe/install-dependencies\n"
+  Tools/wpe/install-dependencies
+  printf "\n$ Tools/Scripts/update-webkitwpe-libs\n"
+  WEBKIT_JHBUILD=1 Tools/Scripts/update-webkitwpe-libs --no-wipe-on-change
+fi
+
 # Build wpewebkit:
+printf "\n$ Tools/Scripts/build-webkit\n"
 NUMBER_OF_PROCESSORS=6 WEBKIT_JHBUILD=1 Tools/Scripts/build-webkit --wpe --release --prefix=$PWD/WebKitBuild/install --cmakeargs='-DENABLE_EXPERIMENTAL_FEATURES=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=OFF -DDEBUG_FISSION=OFF -DENABLE_API_TESTS=OFF -DENABLE_BUBBLEWRAP_SANDBOX=OFF -DUSE_OPENJPEG=OFF -DENABLE_ACCELERATED_2D_CANVAS=ON -DENABLE_NOTIFICATIONS=ON -DUSE_LD_GOLD=OFF -DENABLE_GEOLOCATION=OFF -DENABLE_MEDIA_STATISTICS=ON -DENABLE_ENCRYPTED_MEDIA=ON -DENABLE_LOGS=ON -DENABLE_RELEASE_LOG=ON -DCMAKE_CXX_FLAGS="-D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Os -DDANGEROUS_COMMANDS_ENABLED" -DCMAKE_CXX_FLAGS_DEBUG="-O2 -DNDEBUG -Wno-cast-align" -DCMAKE_CXX_FLAGS_RELEASE="-O2 -DNDEBUG -Wno-cast-align" -DCMAKE_C_FLAGS="-D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Os -DDANGEROUS_COMMANDS_ENABLED" -DCMAKE_C_FLAGS_DEBUG="-O2 -DNDEBUG -Wno-cast-align" -DCMAKE_C_FLAGS_RELEASE="-O2 -DNDEBUG -Wno-cast-align" -DDEVELOPER_MODE=OFF -DENABLE_MINIBROWSER=ON -DUSE_GSTREAMER_GL=ON -DUSE_GSTREAMER_NATIVE_AUDIO=ON -DUSE_GSTREAMER_NATIVE_VIDEO=ON'
 # Install wpewebkit into the prefix path
 ninja install -C WebKitBuild/Release/
 
 # Build cog:
+printf "\nBuild Cog\n"
 PKG_CONFIG_PATH_VAR=$PWD/WebKitBuild/DependenciesWPE/Root/lib/pkgconfig:$PWD/WebKitBuild/install/lib/pkgconfig
 MESON_PREFIX=$PWD/WebKitBuild/install
 cd cog-0.16.1/
