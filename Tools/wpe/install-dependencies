@@ -159,6 +159,11 @@ function installDependenciesWithApt {
         libinput-dev \
         wayland-protocols"
     
+    # These are dependencies we use when running wpewebkit.
+    packages="$packages \
+        weston \
+        wmctrl"
+    
     apt-get install $packages
 }
 
