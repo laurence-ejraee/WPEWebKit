@@ -37,12 +37,15 @@ fi
 export GDK_BACKEND="wayland"
 export XDG_SESSION_TYPE="wayland"
 
+# input-method to disable weston keyboard
 cat >/tmp/.mbweston.ini << EOF
 [shell]
 background-color=0xff000000
 panel-location=""
 [core]
 repaint-window=15
+[input-method]
+path=/dev/null
 EOF
 
 WAYSOCKNAME="WebKitTestSocket${RANDOM}"
