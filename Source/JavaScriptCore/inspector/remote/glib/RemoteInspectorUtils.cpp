@@ -42,7 +42,7 @@ GRefPtr<GBytes> backendCommands()
     static bool moduleLoaded = false;
 
     if (!moduleLoaded) {
-        // laurence.ejraee Add option to set path for libWPEWebInspectorResources.so similar to WebKitWebContext.cpp libWPEInjectedBundle.so
+        // laurence.ejraee Emulator Add option to set path for libWPEWebInspectorResources.so similar to WebKitWebContext.cpp libWPEInjectedBundle.so
         GModule* resourcesModule;
 
         const char* inspectorDirectory = g_getenv("WEBKIT_INSPECTOR_RESOURCES_PATH");

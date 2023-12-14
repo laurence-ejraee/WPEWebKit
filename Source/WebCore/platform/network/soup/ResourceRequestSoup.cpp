@@ -35,6 +35,8 @@
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 
+#include <regex>
+
 namespace WebCore {
 
 static inline SoupMessagePriority toSoupMessagePriority(ResourceLoadPriority priority)
@@ -104,6 +106,27 @@ void ResourceRequest::updateSoupMessageBody(SoupMessage* soupMessage, BlobRegist
         if (auto* vector = WTF::get_if<Vector<char>>(elements[0].data)) {
 #if USE(SOUP2)
             soup_message_body_append(soupMessage->request_body, SOUP_MEMORY_TEMPORARY, vector->data(), vector->size());
+
+            // laurence.ejraee Emulator App exit on jsonrpc request
+            if (soupMessage->method == SOUP_METHOD_POST) {
+                if (url().string() == "http://127.0.0.1:11111/jsonrpc") {
+                    std::smatch match;
+                    std::regex expr("\"\\s*jsonrpc\\s*\"\\s*:\\s*\"\\s*2.0");
+                    // std::regex expr("\"\\s*jsonrpc");
+                    std::string str(vector->data());
+                    if (regex_search(str, match, expr)) {
+                        std::regex method("\"method\"\\s*:\\s*\"Controller.1.deactivate\"");
+                        if (regex_search(str, match, method)) {
+                            std::regex params("\"params\"\\s*:\\s*\\{\\s*\"callsign\"\\s*:\\s*\"WebKitBrowser\"\\s*\\}");
+                            if (regex_search(str, match, params)) {
+                                fprintf(stdout, "\nJSONRPC: Exit POST request made to http://127.0.0.1:11111/jsonrpc  So exitting...\n");
+                                fflush(stdout);
+                                kill(getppid(), SIGKILL); // Kill the process
+                            }
+                        }
+                    }
+                }
+            }
 #else
             GRefPtr<GBytes> bytes = adoptGRef(g_bytes_new_static(vector->data(), vector->size()));
             soup_message_set_request_body_from_bytes(soupMessage, nullptr, bytes.get());

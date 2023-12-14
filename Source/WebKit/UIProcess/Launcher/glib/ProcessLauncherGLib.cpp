@@ -232,7 +232,7 @@ void ProcessLauncher::terminateProcess()
     kill(m_processIdentifier, SIGKILL);
     m_processIdentifier = 0;
 
-    // laurence.ejraee Also kill the MiniBrowser process
+    // laurence.ejraee Emulator Also kill the MiniBrowser process
     kill(getpid(), SIGKILL);
 }
 

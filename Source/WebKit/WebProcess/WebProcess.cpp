@@ -342,7 +342,7 @@ void WebProcess::initializeWebProcess(WebProcessCreationParameters&& parameters)
             WebCore::releaseMemory(critical, synchronous, maintainBackForwardCache, maintainMemoryCache);
         });
 #if PLATFORM(MAC) || PLATFORM(GTK) || PLATFORM(WPE)
-        // laurence.ejraee Allow option to kill process when memory exceeded or not
+        // laurence.ejraee Emulator Allow option to kill process when memory exceeded or not
         const char* preventMemoryKill = getenv("WEBKIT_PREVENT_PROCESS_MEMORY_KILL");
         if (preventMemoryKill && preventMemoryKill[0] != '0') {
             RELEASE_LOG_IF_ALLOWED(Process, "initializeWebProcess: Process will NOT be killed if memory grows above limit");
