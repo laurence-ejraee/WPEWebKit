@@ -313,6 +313,10 @@ bool MediaPlayerPrivateGStreamerMSE::doSeek(const MediaTime& position, float rat
         return m_isSeeking;
     }
 
+    // laurence.ejraee Emulator sleep to fix AOASS-395 Zee5 freeze
+    if (state == GST_STATE_READY && newState == GST_STATE_PAUSED)
+        sleep(2.0);
+
     // Stop accepting new samples until actual seek is finished.
     webKitMediaSrcSetReadyForSamples(WEBKIT_MEDIA_SRC(m_source.get()), false);
 
