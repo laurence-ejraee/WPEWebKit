@@ -63,27 +63,59 @@
       href="http://webkitgtk.org/jhbuild_mirror/"/>
   <repository type="tarball" name="xmlsoft.org"
       href="http://xmlsoft.org"/>
+  <repository type="tarball" name="openssl.org"
+      href="https://www.openssl.org"/>
+  <repository type="tarball" name="sourceware.org"
+      href="https://sourceware.org"/>
 
-  <autotools id="libffi" autogen-sh="configure">
+  <autotools id="libffi" autogen-sh="configure"
+          autogenargs="--build=x86_64-pc-linux-gnu --disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared build_alias=x86_64-pc-linux-gnu CPPFLAGS='-D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64'">
     <branch module="libffi/libffi-3.3.tar.gz" version="3.3"
              repo="sourceware.org-mirror"
-             hash="sha256:72fba7922703ddfa7a028d513ac15a85c8d54c8d67f55fa5a4802885dc652056"/>
+             hash="sha256:72fba7922703ddfa7a028d513ac15a85c8d54c8d67f55fa5a4802885dc652056">
+      <patch file="libffi-0001-Fix-installation-location-of-libffi.patch" strip="1"/>
+      <patch file="libffi-0002-Fix-use-of-compact-eh-frames-on-MIPS.patch" strip="1"/>
+      <patch file="libffi-0003-libffi-enable-hardfloat-in-the-MIPS-assembly-code.patch" strip="1"/>
+      <patch file="libffi-0004-ffi_powerpc.h-fix-build-failure-with-powerpc7.patch" strip="1"/>
+      <patch file="libffi-0005-powerpc-fix-build-failure-on-power7-and-older.patch" strip="1"/>
+      <patch file="libffi-0006-Address-platforms-with-no-__int128.patch" strip="1"/>
+      <patch file="libffi-0007-powerpc64-Use-memcpy-to-help-platforms-with-no-__int128.patch" strip="1"/>
+    </branch>
   </autotools>
 
   <meson id="glib"
-         mesonargs="-Dlibmount=disabled -Dselinux=disabled">
+         mesonargs="-Dinternal_pcre=false -Dinstalled_tests=false -Doss_fuzz=disabled -Dselinux=disabled -Dlibmount=enabled -Dbuildtype=release -Ddefault_library=shared">
     <dependencies>
       <dep package="libffi"/>
     </dependencies>
     <branch module="/pub/GNOME/sources/glib/2.64/glib-${version}.tar.xz" version="2.64.2"
             repo="ftp.gnome.org"
             hash="sha256:9a2f21ed8f13b9303399de13a0252b7cbcede593d26971378ec6cb90e87f2277">
+      <patch file="glib-0001-fix-compile-time-atomic-detection.patch" strip="1"/>
+      <patch file="glib-0002-allow-explicit-disabling-of-tests.patch" strip="1"/>
+      <patch file="glib-0003-remove-cpp-requirement.patch" strip="1"/>
+      <patch file="glib-0004-Add-Wno-format-nonliteral-to-compiler-arguments.patch" strip="1"/>
     </branch>
   </meson>
+  
+  <autotools id="libopenssl" autogen-template="%(srcdir)s/Configure --prefix=%(prefix)s --openssldir=%(prefix)s/etc/ssl linux-x86_64 -latomic -lpthread threads shared no-rc5 enable-camellia enable-mdc2 no-tests no-fuzz-libfuzzer no-fuzz-afl zlib-dynamic">
+    <branch module="/source/openssl-${version}.tar.gz" version="1.1.1h"
+             repo="openssl.org"
+             hash="sha256:5c9ca8774bd7b03e5784f26ae9e9e6d749c9da2438545077e6b3d755a06595d9">
+      <patch file="libopenssl-0001-Dont-waste-time-building-manpages-if-we-re-not-going.patch" strip="1"/>
+      <patch file="libopenssl-0002-Reproducible-build-do-not-leak-compiler-path.patch" strip="1"/>
+      <patch file="libopenssl-0003-Introduce-the-OPENSSL_NO_MADVISE-to-disable-call-to-.patch" strip="1"/>
+      <patch file="libopenssl-0004-Configure-use-ELFv2-ABI-on-some-ppc64-big-endian-sys.patch" strip="1"/>
+      <patch file="libopenssl-0005-crypto-perlasm-ppc-xlate.pl-add-linux64v2-flavour.patch" strip="1"/>
+      <patch file="libopenssl-0006-remove-gcc8-getentropy-dep.patch" strip="1"/>
+    </branch>
+  </autotools>
 
-  <meson id="glib-networking">
+  <meson id="glib-networking"
+          mesonargs="-Dlibproxy=disabled -Dgnome_proxy=disabled -Dgnutls=enabled -Dopenssl=enabled -Dbuildtype=release -Ddefault_library=shared">
     <dependencies>
       <dep package="glib"/>
+      <dep package="libopenssl"/>
     </dependencies>
     <branch module="/pub/GNOME/sources/glib-networking/2.62/glib-networking-${version}.tar.xz" version="2.62.4"
             repo="ftp.gnome.org"
@@ -102,7 +134,7 @@
   </autotools-->
 
   <autotools id="libsoup" 
-             autogen-sh="configure" autogenargs="--disable-introspection">
+             autogen-sh="configure" autogenargs="--build=x86_64-pc-linux-gnu --disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared --disable-glibtest --enable-vala=no --with-gssapi=no --without-introspection --without-gnome">
     <dependencies>
       <dep package="glib-networking"/>
       <dep package="libpsl"/>
@@ -110,6 +142,8 @@
     <branch module="/sources/libsoup/2.62/libsoup-${version}.tar.xz" version="2.62.3"
             repo="download.gnome.org"
             hash="sha256:d312ade547495c2093ff8bda61f9b9727a98cfdae339f3263277dd39c0451172">
+      <!--patch file="libsoup-0001-Revert-tld-parser-use-Python-3.patch" strip="1"/-->
+      <patch file="libsoup-0002-soup-cookie-jar-add-API-to-set-a-limit-of-cookies-in.patch" strip="1"/>
     </branch>
   </autotools>
 
@@ -123,26 +157,45 @@
     <branch repo="github.com" module="mrobinson/webkitgtk-test-dicts.git" checkoutdir="webkitgtk-test-dicts" tag="0.0.1"/>
   </autotools-->
 
+  <autotools id="bzip2" autogen-template="make -C %(srcdir)s libbz2.a bzip2 bzip2recover LIBDIR=lib LIBDIR=lib PREFIX=%(prefix)s install ; make -C %(srcdir)s -f Makefile-libbz2_so ; make -C %(srcdir)s -f Makefile-libbz2_so LIBDIR=lib LIBDIR=lib PREFIX=%(prefix)s install"
+          supports-non-srcdir-builds="no"
+          skip-install="yes">
+    <branch module="/pub/bzip2/bzip2-${version}.tar.gz" version="1.0.8"
+             repo="sourceware.org"
+             hash="sha512:083f5e675d73f3233c7930ebe20425a533feedeaaa9d8cc86831312a6581cefbe6ed0d08d2fa89be81082f2a5abdabca8b3c080bf97218a1bd59dc118a30b9f3">
+      <patch file="bzip-0001-build-objects-twice.patch" strip="1"/>
+      <patch file="bzip-0002-improve-build-system.patch" strip="1"/>
+      <patch file="bzip-0003-add-libdir-to-makefile.patch" strip="1"/>
+      <patch file="bzip-0004-add-libdir-to-makefile-libbz2.patch" strip="1"/>
+    </branch>
+  </autotools>
+
   <autotools id="freetype6" autogen-sh="configure"
-        autogenargs="--with-harfbuzz=no">
+        autogenargs="--build=x86_64-pc-linux-gnu --disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared --without-harfbuzz --enable-freetype-config --with-zlib --without-brotli --with-bzip2 --with-png">
+    <dependencies>
+      <dep package="bzip2"/>
+    </dependencies>
     <branch module="freetype/freetype-2.10.4.tar.gz" version="2.10.4"
             repo="savannah.gnu.org"
             hash="sha256:5eab795ebb23ac77001cfb68b7d4d50b5d6c7469247b0b01b2c953269f658dac"/>
   </autotools>
 
   <autotools id="fontconfig" autogen-sh="configure"
-             autogenargs="--disable-docs"
+             autogenargs="--build=x86_64-pc-linux-gnu --disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared --with-cache-dir=/var/cache/fontconfig --disable-docs"
              supports-non-srcdir-builds="no">
     <dependencies>
       <dep package="freetype6"/>
     </dependencies>
     <branch module="software/fontconfig/release/fontconfig-2.13.1.tar.bz2" version="2.13.1"
             repo="freedesktop.org"
-            hash="sha256:f655dd2a986d7aa97e052261b36aa67b0a64989496361eca8d604e6414006741"/>
+            hash="sha256:f655dd2a986d7aa97e052261b36aa67b0a64989496361eca8d604e6414006741">
+      <patch file="fontconfig-0001-Fix-the-build-issue-with-enable-static.patch" strip="1"/>
+      <patch file="fontconfig-0002-add-pthread-as-a-dependency-of-a-static-lib.patch" strip="1"/>
+    </branch>
   </autotools>
 
-  <autotools id="harfbuzz" autogen-sh="configure"
-        autogenargs="--with-cairo=no --with-glib=yes --with-freetype=yes --with-fontconfig=yes --with-icu=yes">
+  <meson id="harfbuzz"
+          mesonargs="-Dfontconfig=disabled -Dgdi=disabled -Ddirectwrite=disabled -Dcoretext=disabled -Dtests=disabled -Ddocs=disabled -Dbenchmark=disabled -Dicu_builtin=false -Dexperimental_api=false -Dfuzzer_ldflags= -Dcairo=enabled -Dfreetype=enabled -Dgobject=disabled -Dintrospection=disabled -Dgraphite=disabled -Dglib=enabled -Dicu=enabled -Dbuildtype=release -Ddefault_library=shared">
     <dependencies>
       <dep package="glib"/>
       <dep package="freetype6"/>
@@ -153,30 +206,39 @@
             version="2.7.2"
             checkoutdir="harfbuzz-${version}"
             repo="github-tarball"
-            hash="sha256:b8c048d7c2964a12f2c80deb6634dfc836b603dd12bf0d0a3df1627698e220ce"/>
-  </autotools>
+            hash="sha256:b8c048d7c2964a12f2c80deb6634dfc836b603dd12bf0d0a3df1627698e220ce">
+      <patch file="harfbuzz-0001-src-meson.build-allow-introspection-when-cross-compi.patch" strip="1"/>
+      <patch file="harfbuzz-0002-meson.build-check-for-pthread.h.patch" strip="1"/>
+    </branch>
+  </meson>
 
   <autotools id="icu"
              autogen-sh="./source/configure"
-             autogenargs="--disable-samples --enable-weak-threads">
+             autogenargs="--build=x86_64-pc-linux-gnu --disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared --disable-samples --disable-tests">
     <branch module="icu4c-63_1-src.tgz" version="63.1" checkoutdir="icu"
             repo="webkitgtk-jhbuild-mirror"
             hash="sha256:05c490b69454fce5860b7e8e2821231674af0a11d7ef2febea9a32512998cb9d">
-      <patch file="icudata-stdlibs.patch" strip="1"/>
+      <!--patch file="icudata-stdlibs.patch" strip="1"/-->
+      <patch file="icu-0001-dont-build-static-dynamic-twice.patch" strip="1"/>
+      <patch file="icu-0002-workaround-toolchain-bugs.patch" strip="1"/>
+      <patch file="icu-0003-link-icudata-as-data-only.patch" strip="1"/>
+      <patch file="icu-0004-fix-static-linking-with-icu-uc.patch" strip="1"/>
     </branch>
   </autotools>
 
   <autotools id="pixman"
              autogen-sh="configure"
-             autogenargs="--enable-gtk=no">
+             autogenargs="--build=x86_64-pc-linux-gnu --disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared --disable-gtk --disable-arm-simd --disable-arm-neon --disable-arm-iwmmxt">
     <branch module="releases/pixman-0.40.0.tar.gz" version="0.40.0"
             repo="cairographics.org"
-            hash="sha1:d7baa6377b6f48e29db011c669788bb1268d08ad"/>
+            hash="sha1:d7baa6377b6f48e29db011c669788bb1268d08ad">
+      <patch file="pixman-0001-Disable-tests.patch" strip="1"/>
+    </branch>
   </autotools>
 
   <autotools id="cairo"
              autogen-sh="configure"
-             autogenargs="--enable-egl=yes --enable-glesv2">
+             autogenargs="--build=x86_64-pc-linux-gnu --disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared --enable-trace=no --enable-interpreter=no --disable-directfb --enable-ft --enable-gobject --disable-gl --enable-glesv2 --disable-vg --disable-xlib --disable-xcb --without-x --disable-xlib-xrender --disable-ps --disable-pdf --enable-png --disable-script --disable-svg --disable-tee --disable-xml">
     <dependencies>
       <dep package="glib"/>
       <dep package="fontconfig"/>
@@ -186,18 +248,21 @@
             repo="cairographics.org"
             hash="sha1:00e81842ae5e81bb0343108884eb5205be0eac14">
       <!-- See https://gitlab.freedesktop.org/cairo/cairo/merge_requests/5 -->
-      <patch file="cairo-ft-Use-FT_Done_MM_Var-instead-of-free-when-available.patch" strip="1"/>
+      <patch file="cairo-0001-fix-nofork-build.patch" strip="1"/>
+      <patch file="cairo-0002-ft-Use-FT_Done_MM_Var-instead-of-free-when-available.patch" strip="1"/>
     </branch>
   </autotools>
 
-  <cmake id="libwpe">
+  <cmake id="libwpe"
+          cmakeargs="-DBUILD_DOC=OFF -DBUILD_EXAMPLE=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TEST=OFF -DBUILD_TESTING=OFF -DBUILD_TESTS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_COLOR_MAKEFILE=OFF -DCMAKE_CXX_FLAGS='-D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64  -Os   -DDANGEROUS_COMMANDS_ENABLED -D_GNU_SOURCE' -DCMAKE_CXX_FLAGS_DEBUG='' -DCMAKE_CXX_FLAGS_RELEASE=' -DNDEBUG' -DCMAKE_C_FLAGS='-D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64  -Os   -DDANGEROUS_COMMANDS_ENABLED -D_GNU_SOURCE' -DCMAKE_C_FLAGS_DEBUG='' -DCMAKE_C_FLAGS_RELEASE=' -DNDEBUG' -DCMAKE_EXE_LINKER_FLAGS='' -DCMAKE_MODULE_LINKER_FLAGS='' -DCMAKE_SHARED_LINKER_FLAGS=''">
     <branch repo="gitlab.red" 
             module="ott-sidecar-integration-project/wpeframework-components/libwpe.git" 
             checkoutdir="libwpe" 
             tag="emulator-1.14.0"/>
   </cmake>
 
-  <meson id="wpebackend-fdo">
+  <meson id="wpebackend-fdo"
+          mesonargs="-Ddocs=false -Dtests=false -Dbuildtype=release">
     <dependencies>
       <dep package="libwpe"/>
       <dep package="glib"/>
@@ -207,7 +272,8 @@
             tag="astro-2.28-1.14.2"/>
   </meson>
 
-  <autotools id="libgpg-error" autogen-sh="autoreconf">
+  <autotools id="libgpg-error" autogen-sh="autoreconf"
+          autogenargs="--build=x86_64-pc-linux-gnu --disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared --disable-tests">
     <branch module="libgpg-error/libgpg-error-${version}.tar.bz2"
             version="1.37"
             repo="gnupg.org"
@@ -215,19 +281,23 @@
     </branch>
   </autotools>
 
-  <autotools id="libgcrypt" autogen-sh="configure">
+  <autotools id="libgcrypt" autogen-sh="configure"
+          autogenargs="--build=x86_64-pc-linux-gnu --disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared --disable-tests">
     <branch module="libgcrypt/libgcrypt-${version}.tar.bz2"
             version="1.8.6"
             repo="gnupg.org"
             hash="sha256:0cba2700617b99fc33864a0c16b1fa7fdf9781d9ed3509f5d767178e5fd7b975">
-        <patch file="libgcrypt-use-only-dev-urandom-for-testing.patch" strip="1"/>
+        <!--patch file="libgcrypt-use-only-dev-urandom-for-testing.patch" strip="1"/-->
+        <patch file="libgcrypt-0001-build-Don-t-default-to-underscore-yes-for-cross-buil.patch" strip="1"/>
+        <patch file="libgcrypt-0002-configure.ac-add-an-option-to-disable-tests.patch" strip="1"/>
     </branch>
     <dependencies>
       <dep package="libgpg-error"/>
     </dependencies>
   </autotools>
 
-  <meson id="libepoxy">
+  <meson id="libepoxy"
+          mesonargs="-Ddocs=false -Dtests=false -Degl=yes -Dglx=no -Dx11=false -Dbuildtype=release -Ddefault_library=shared">
     <branch module="anholt/libepoxy/releases/download/1.5.4/libepoxy-1.5.4.tar.xz"
             version="1.5.4" repo="github-tarball"/>
   </meson>
@@ -261,7 +331,10 @@
             version="0.55.3"
             module="mesonbuild/meson/releases/download/${version}/meson-${version}.tar.gz"
             checkoutdir="meson-${version}"
-            hash="sha256:6bed2a25a128bbabe97cf40f63165ebe800e4fcb46db8ab7ef5c2b5789f092a5"/>
+            hash="sha256:6bed2a25a128bbabe97cf40f63165ebe800e4fcb46db8ab7ef5c2b5789f092a5">
+      <patch file="meson-0001-Prefer-ext-static-libs-when-default-library-static.patch" strip="1"/>
+      <patch file="meson-0002-mesonbuild-dependencies-base.py-add-pkg_config_stati.patch" strip="1"/>
+    </branch>
     <dependencies>
       <dep package="ninja"/>
     </dependencies>
@@ -310,23 +383,43 @@
     </dependencies>
   </meson-->
 
+  <autotools id="libxslt" supports-non-srcdir-builds="no"
+             autogen-sh="./configure --build=x86_64-pc-linux-gnu --disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared --with-gnu-ld --without-debug --without-python">
+    <branch module="/sources/libxslt-${version}.tar.gz" version="1.1.34"
+            repo="xmlsoft.org"
+            hash="sha256:98b1bd46d6792925ad2dfe9a87452ea2adebf69dcb9919ffd55bf926a7f93f7f">
+    </branch>
+    <dependencies>
+      <dep package="libxslt"/>
+    </dependencies>
+  </autotools>
+
   <autotools id="libxml2" supports-non-srcdir-builds="no"
-             autogen-sh="./autogen.sh; ./configure --with-python=no">
+             autogen-sh="./autogen.sh; ./configure --build=x86_64-pc-linux-gnu --disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared --with-gnu-ld --without-python --without-debug --with-lzma --with-iconv">
     <branch module="/sources/libxml2-2.9.10.tar.gz" version="2.9.10"
             repo="xmlsoft.org"
-            hash="sha256:aafee193ffb8fe0c82d4afef6ef91972cbaf5feea100edc2f262750611b4be1f"/>
+            hash="sha256:aafee193ffb8fe0c82d4afef6ef91972cbaf5feea100edc2f262750611b4be1f">
+      <patch file="libxml-0001-Fix-infinite-loop-in-xmlStringLenDecodeEntities.patch" strip="1"/>
+      <patch file="libxml-0002-Fix-memory-leak-in-xmlSchemaValidateStream.patch" strip="1"/>
+      <patch file="libxml-0003-Fix-out-of-bounds-read-with-xmllint--htmlout.patch" strip="1"/>
+    </branch>
+    <dependencies>
+      <dep package="libxslt"/>
+    </dependencies>
   </autotools>
 
   <autotools id="shared-mime-info"
              autogen-sh="configure"
-             autogenargs="--disable-default-make-check">
+             autogenargs="--build=x86_64-pc-linux-gnu --disable-gtk-doc --disable-gtk-doc-html --disable-doc --disable-docs --disable-documentation --with-xmlto=no --with-fop=no --disable-dependency-tracking --enable-ipv6 --disable-nls --disable-static --enable-shared --disable-update-mimedb --disable-default-make-check">
     <dependencies>
       <dep package="libxml2"/>
       <dep package="glib"/>
     </dependencies>
     <branch module="/xdg/shared-mime-info/uploads/80c7f1afbcad2769f38aeb9ba6317a51/shared-mime-info-${version}.tar.xz" version="1.12"
             repo="gitlab-fdo-tarball"
-            hash="sha256:18b2f0fe07ed0d6f81951a5fd5ece44de9c8aeb4dc5bb20d4f595f6cc6bd403e"/>
+            hash="sha256:18b2f0fe07ed0d6f81951a5fd5ece44de9c8aeb4dc5bb20d4f595f6cc6bd403e">
+      <patch file="shared-mime-info-0001-Remove-incorrect-dependency-from-install-data-hook.patch" strip="1"/>
+    </branch>
   </autotools>
 
 </moduleset>
