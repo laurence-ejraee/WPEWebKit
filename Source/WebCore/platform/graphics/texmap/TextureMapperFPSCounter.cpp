@@ -107,21 +107,24 @@ void TextureMapperFPSCounter::updateMemAndDisplay(TextureMapper& textureMapper, 
     }
 
     Color bgColor = Color(128, 128, 128, 128);
-    textureMapper.drawText("GFX", bgColor, Color::black, location, TransformationMatrix().scale(3.0));
-    textureMapper.drawText(String::number(m_lastGfxMem) + "MB", bgColor, Color::black, FloatPoint(0, 12), TransformationMatrix().scale(3.0));
-
-    // Note: Color(B, G, R) not RGB
-    String gfxLevel = ((m_lastGfxPercent >= 95) ? ((m_lastGfxPercent >= 100) ? "(critical)" : "(near-critical)") : "");
-    Color gfxColor = ((m_lastGfxPercent >= 95) ? ((m_lastGfxPercent >= 100) ? Color(0, 0, 255) : Color(0,128, 255)) : Color::black);
-    textureMapper.drawText(String::number(m_lastGfxPercent) + "% " + gfxLevel, bgColor, gfxColor, FloatPoint(0, 24), TransformationMatrix().scale(3.0));
     Color layersColor = ((m_layersMem >= 95) ? ((m_layersMem >= 100) ? Color(0, 0, 255) : Color(0,128, 255)) : Color::black);
-    textureMapper.drawText("Layers: " + String::number(m_layersMem) + "MB", bgColor, layersColor, FloatPoint(0, 36), TransformationMatrix().scale(3.0));
+    textureMapper.drawText("Layers: " + String::number(m_layersMem) + "MB", bgColor, layersColor, location, TransformationMatrix().scale(3.0));
 
-    textureMapper.drawText("WebProcess", bgColor, Color::black, FloatPoint(0, 48), TransformationMatrix().scale(3.0));
-    textureMapper.drawText(String::number(m_lastProcMem) + "MB", bgColor, Color::black, FloatPoint(0, 60), TransformationMatrix().scale(3.0));
+    textureMapper.drawText("WebProcess", bgColor, Color::black, FloatPoint(0, 12), TransformationMatrix().scale(3.0));
+    textureMapper.drawText(String::number(m_lastProcMem) + "MB", bgColor, Color::black, FloatPoint(0, 24), TransformationMatrix().scale(3.0));
     String procLevel = ((m_lastProcPercent >= 95) ? ((m_lastProcPercent >= 100) ? "(critical)" : "(near-critical)") : "");
     Color procColor = ((m_lastProcPercent >= 95) ? ((m_lastProcPercent >= 100) ? Color(0, 0, 255) : Color(0,128, 255)) : Color::black);
-    textureMapper.drawText(String::number(m_lastProcPercent) + "% " + procLevel, bgColor, procColor, FloatPoint(0, 72), TransformationMatrix().scale(3.0));
+    textureMapper.drawText(String::number(m_lastProcPercent) + "% " + procLevel, bgColor, procColor, FloatPoint(0, 36), TransformationMatrix().scale(3.0));
+
+    const char* showGfxMem = getenv("WEBKIT_SHOW_GFX_MEMORY");
+    if( showGfxMem && showGfxMem[0] != '0' ) {
+        textureMapper.drawText("GFX", bgColor, Color::black, FloatPoint(0, 48), TransformationMatrix().scale(3.0));
+        textureMapper.drawText(String::number(m_lastGfxMem) + "MB", bgColor, Color::black, FloatPoint(0, 60), TransformationMatrix().scale(3.0));
+        // Note: Color(B, G, R) not RGB
+        String gfxLevel = ((m_lastGfxPercent >= 95) ? ((m_lastGfxPercent >= 100) ? "(critical)" : "(near-critical)") : "");
+        Color gfxColor = ((m_lastGfxPercent >= 95) ? ((m_lastGfxPercent >= 100) ? Color(0, 0, 255) : Color(0,128, 255)) : Color::black);
+        textureMapper.drawText(String::number(m_lastGfxPercent) + "% " + gfxLevel, bgColor, gfxColor, FloatPoint(0, 72), TransformationMatrix().scale(3.0));
+    }
 }
 
 void TextureMapperFPSCounter::updateLayersMem(int layersMem)
