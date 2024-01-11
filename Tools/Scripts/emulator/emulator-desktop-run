@@ -1,0 +1,15 @@
+#!/bin/bash
+cd /wpewebkit-emulator/WPEWebKit/
+read -p "Enter the URL: " url
+./launch-wpewebkit "${url}"
+
+# Exit dialog
+echo
+echo
+echo
+echo
+echo "************************"
+echo
+echo "Press ENTER to Exit."
+echo
+read -p "************************"
