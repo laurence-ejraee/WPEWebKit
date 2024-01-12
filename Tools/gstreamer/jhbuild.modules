@@ -79,6 +79,8 @@
     </dependencies>
     <branch hash="sha256:4ec816010dd4d3a93cf470ad0a6f25315f52b204eb1d71dfa70ab8a1c3bd06e6" module="gstreamer/gstreamer-${version}.tar.xz" repo="gstreamer" version="1.18.6">
       <patch file="gstreamer-0001-Small-robustness-fixes.patch" strip="1" />
+      <patch file="gstreamer-0005-gst-gstpluginloader.c-when-env-var-is-set-do-not-fal.patch" strip="1" />
+      <patch file="gstreamer-0006-calculating-the-bytes-for-seeked-position.patch" strip="1" />
     </branch>
   </meson>
 
@@ -96,6 +98,11 @@
       <patch file="base-0004-Build-fixes-for-GST_TAG_API-and-audio-buffer.patch" strip="1" />
       <patch file="base-0005-gsturisourcebin-Don-t-try-to-plug-a-typefinder-on-dy.patch" strip="1" />
       <patch file="base-0006-streamsynchronizer-Consider-streams-having-received-.patch" strip="1" />
+      <patch file="base-0010-ENGR00312515-get-caps-from-src-pad-when-query-caps.patch" strip="1" />
+      <patch file="base-0011-matroska-demux-support-for-parsing-HDR-plugin-base_gst-1.18.patch" strip="1" />
+      <patch file="base-0012-glimagesink-Downrank-to-marginal.patch" strip="1" />
+      <patch file="base-0030-XRE-12082-Reset-eos-on-appsrc-on-send-flush-gst1.18.patch" strip="1" />
+      <patch file="base-0031-decodebin3-continue-parsebin-autoplug-if-requested-gst1.18.patch" strip="1" />
     </branch>
   </meson>
 
@@ -103,7 +110,6 @@
     <dependencies>
       <dep package="gst-plugins-base"/>
     </dependencies>
-
     <branch hash="sha256:26723ac01fcb360ade1f41d168c7c322d8af4ceb7e55c8c12ed2690d06a76eed" module="gst-plugins-good/gst-plugins-good-${version}.tar.xz" repo="gstreamer" version="1.18.6">
       <patch file="good-0001-souphttpsrc-cookie-jar-and-context-query-support.patch" strip="1" />
       <patch file="good-0002-0007-qtdemux-dont-check-pushbased-edts.patch.patch" strip="1" />
@@ -124,6 +130,25 @@
       <patch file="good-0016-qtdemux-Fix-critical-message-on-cenc-sample-grouping.patch" strip="1" />
       <patch file="good-0017-Avoid-sending-EOS-prematurely-for-live-stream.patch" strip="1" />
       <patch file="good-0018-audioparser-remove-eac3-aacparse-for-svp.patch" strip="1" />
+      <patch file="good-0030-qtdemux-add-senc-parser-gst1.18.patch" strip="1" />
+      <patch file="good-0031-Fix-senc-subsample_count-gst1.18.patch" strip="1" />
+      <patch file="good-0032-qtdemux-fix-signle-frame-processing-gst1.18.patch" strip="1" />
+      <patch file="good-0033-qtdemux-aamp-tm-gst1.18.patch" strip="1" />
+      <patch file="good-0034-qtdemux-add-atmos-mimetype-gst1.18.patch" strip="1" />
+      <patch file="good-0035-qtdemux-remove-override-segment-event-gst1.18.patch" strip="1" />
+      <patch file="good-0036-qtdemux-clear-crypto-info-on-trak-switch-gst1.18.patch" strip="1" />
+      <patch file="good-0037-Clear-protected-flag-on-switching-tracks-gst1.18.patch" strip="1" />
+      <patch file="good-0038-Initial-support-for-Dolby-Vision-gst1.18.patch" strip="1" />
+      <patch file="good-0039-qtdemux-aamp-tm-multiperiod-gst1.18.patch" strip="1" />
+      <patch file="good-0040-Manual-revert-of-bfd0e022-qtdemux-rework-seg-gst1.18.patch" strip="1" />
+      <patch file="good-0041-qtdemux-add-context-for-a-preferred-protection-gst1.18.patch" strip="1" />
+      <patch file="good-0042-qtdemux-restrict-segment-event-for-aamp-over-gst1.18.patch" strip="1" />
+      <patch file="good-0043-qtdemux-aamp-fix-mp4a-atom-skip-gst1.18.patch" strip="1" />
+      <patch file="good-0044-adding-uuid-tag-gst1.18.patch" strip="1" />
+      <patch file="good-0046-qtdemux-check-ss_info-gst1.18.patch" strip="1" />
+      <patch file="good-0047-qtdemux-aamp-avoid-unwanted-header-logging-gst1.18.patch" strip="1" />
+      <patch file="good-0048-fix-for-switching-from-clear-to-encrypted-and-vice-v.patch" strip="1" />
+      <patch file="good-0049-LLAMA-8596-Fix-for-demux-end-of-segment-detection.patch" strip="1" />
     </branch>
   </meson>
 
@@ -148,6 +173,9 @@
       <patch file="bad-0009-mssdemux-support-for-live-content-as-vod.patch" strip="1" />
       <patch file="bad-0010-mssdemux-return-initialization-data-decoded-from-bas.patch" strip="1" />
       <patch file="bad-0011-wayland-patch-update-to-handle-non-overlay-case.patch" strip="1" />
+      <patch file="bad-0030-RDK-30521-h265-parser-patch-to-embed-SEI-timecodes-gst1.18.patch" strip="1" />
+      <patch file="bad-0031-videoparser-remove-h264-h265parse-for-svp.patch" strip="1" />
+      <patch file="bad-0032-h264parse-always-send-codec-data-updates-gst1.18.patch" strip="1" />
     </branch>
   </meson>
 
