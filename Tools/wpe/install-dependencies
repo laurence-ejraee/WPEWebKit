@@ -161,6 +161,7 @@ function installDependenciesWithApt {
     
     # These are dependencies we use when running wpewebkit.
     packages="$packages \
+        graphviz \
         weston \
         wmctrl"
     

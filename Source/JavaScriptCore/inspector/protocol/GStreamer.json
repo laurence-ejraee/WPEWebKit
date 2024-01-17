@@ -1,0 +1,44 @@
+{
+    "domain": "GStreamer",
+    "featureGuard": "USE(GSTREAMER)",
+    "debuggableTypes": ["page", "web-page"],
+    "targetTypes": ["page"],
+    "commands": [
+        {
+            "name": "getActivePipelinesNames",
+            "description": "Returns the list of currently running GStreamer pipelines.",
+            "returns": [
+                { "name": "pipelines", "type": "array", "items": { "$ref": "string"}, "description": "Array of pipeline names." }
+            ]
+        },
+        {
+            "name": "getActivePipelineBinNames",
+            "description": "Returns the list of bins in the given GStreamer pipeline.",
+            "parameters": [
+                { "name": "pipeline", "type": "string", "description": "Name of the GStreamer pipeline to dump." },
+                { "name": "child", "type": "string", "description": "Name of the child bin to dump." }
+            ],
+            "returns": [
+                { "name": "binNames", "type": "array", "items": { "$ref": "string"}, "description": "Array of bin names." }
+            ]
+        },
+        {
+            "name": "dumpActivePipeline",
+            "async": true,
+            "description": "Returns the SVG representation of the given GStreamer pipeline.",
+            "parameters": [
+                { "name": "pipeline", "type": "string", "description": "Name of the GStreamer pipeline to dump." },
+                { "name": "child", "type": "string", "description": "Name of the child bin to dump." }
+            ],
+            "returns": [
+                { "name": "pipelineGraphRepresentation", "type": "string", "description": "SVG representation of the pipeline" }
+            ]
+        }
+    ],
+    "events": [
+        {
+            "name": "activePipelinesChanged",
+            "description": "Fired when the internal registry of active GStreamer pipelines was updated, eg when a new pipeline was registered or when a pipeline was removed from the registry."
+        }
+    ]
+}

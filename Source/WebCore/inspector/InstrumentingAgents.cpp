@@ -72,6 +72,9 @@ void InstrumentingAgents::reset()
     m_persistentInspectorAnimationAgent = nullptr;
     m_enabledInspectorAnimationAgent = nullptr;
     m_trackingInspectorAnimationAgent = nullptr;
+#if USE(GSTREAMER)
+    m_persistentInspectorGStreamerAgent = nullptr;
+#endif
 }
 
 } // namespace WebCore

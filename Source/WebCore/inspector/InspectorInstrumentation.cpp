@@ -85,6 +85,10 @@
 #include "WebGPUSwapChain.h"
 #endif
 
+#if USE(GSTREAMER)
+#include "InspectorGStreamerAgent.h"
+#endif
+
 namespace WebCore {
 
 using namespace Inspector;
@@ -1307,5 +1311,13 @@ InstrumentingAgents* InspectorInstrumentation::instrumentingAgentsForContext(Scr
         return &instrumentingAgentsForWorkerGlobalScope(downcast<WorkerGlobalScope>(context));
     return nullptr;
 }
+
+#if USE(GSTREAMER)
+void InspectorInstrumentation::gstreamerActivePipelinesChangedImpl(InstrumentingAgents& instrumentingAgents)
+{
+    if (auto* gstreamerAgent = instrumentingAgents.persistentInspectorGStreamerAgent())
+        gstreamerAgent->activePipelinesChanged();
+}
+#endif
 
 } // namespace WebCore

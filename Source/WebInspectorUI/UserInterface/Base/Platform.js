@@ -25,6 +25,7 @@
 
 WI.Platform = {
     name: InspectorFrontendHost.platform,
+    port: InspectorFrontendHost.port,
     isNightlyBuild: false,
     version: {
         base: 0,

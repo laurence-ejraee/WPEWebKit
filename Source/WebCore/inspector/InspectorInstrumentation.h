@@ -317,6 +317,10 @@ public:
     static void layerTreeDidChange(Page*);
     static void renderLayerDestroyed(Page*, const RenderLayer&);
 
+#if USE(GSTREAMER)
+    static void gstreamerActivePipelinesChanged(Document&);
+#endif
+
     static void frontendCreated();
     static void frontendDeleted();
     static bool hasFrontends() { return InspectorInstrumentationPublic::hasFrontends(); }
@@ -516,6 +520,10 @@ private:
 
     static void layerTreeDidChangeImpl(InstrumentingAgents&);
     static void renderLayerDestroyedImpl(InstrumentingAgents&, const RenderLayer&);
+
+#if USE(GSTREAMER)
+    static void gstreamerActivePipelinesChangedImpl(InstrumentingAgents&);
+#endif
 
     static InstrumentingAgents& instrumentingAgentsForPage(Page&);
     static InstrumentingAgents& instrumentingAgentsForWorkerGlobalScope(WorkerGlobalScope&);
@@ -1641,6 +1649,15 @@ inline void InspectorInstrumentation::willFireAnimationFrame(Document& document,
     if (auto* instrumentingAgents = instrumentingAgentsForDocument(document))
         willFireAnimationFrameImpl(*instrumentingAgents, callbackId, document);
 }
+
+#if USE(GSTREAMER)
+inline void InspectorInstrumentation::gstreamerActivePipelinesChanged(Document& document)
+{
+    FAST_RETURN_IF_NO_FRONTENDS(void());
+    if (auto* instrumentingAgents = instrumentingAgentsForDocument(document))
+        gstreamerActivePipelinesChangedImpl(*instrumentingAgents);
+}
+#endif
 
 inline void InspectorInstrumentation::didFireAnimationFrame(Document& document)
 {

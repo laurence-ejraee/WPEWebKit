@@ -74,6 +74,8 @@ WI.loaded = function()
         InspectorBackend.registerDatabaseDispatcher(WI.DatabaseObserver);
     if (InspectorBackend.registerDebuggerDispatcher)
         InspectorBackend.registerDebuggerDispatcher(WI.DebuggerObserver);
+    if (InspectorBackend.registerGStreamerDispatcher)
+        InspectorBackend.registerGStreamerDispatcher(WI.GStreamerObserver);
     if (InspectorBackend.registerHeapDispatcher)
         InspectorBackend.registerHeapDispatcher(WI.HeapObserver);
     if (InspectorBackend.registerInspectorDispatcher)
@@ -127,6 +129,7 @@ WI.loaded = function()
         WI.domDebuggerManager = new WI.DOMDebuggerManager,
         WI.canvasManager = new WI.CanvasManager,
         WI.animationManager = new WI.AnimationManager,
+        WI.gstreamerManager = new WI.GStreamerManager,
     ];
 
     // Register for events.
@@ -486,6 +489,11 @@ WI.contentLoaded = function()
     ];
 
     WI._knownTabClassesByType = new Map;
+
+    if (WI.Platform.port === "gtk" || WI.Platform.port === "wpe") {
+        productionTabClasses.push(WI.GStreamerTabContentView);
+    }
+
     // Set tab classes directly. The public API triggers other updates and
     // notifications that won't work or have no listeners at WI point.
     for (let tabClass of productionTabClasses)
@@ -1236,6 +1244,9 @@ WI.tabContentViewClassForRepresentedObject = function(representedObject)
 
     if (representedObject instanceof WI.Canvas || representedObject instanceof WI.ShaderProgram || representedObject instanceof WI.Recording || representedObject instanceof WI.Animation)
         return WI.GraphicsTabContentView;
+
+    if (representedObject instanceof WI.GStreamerPipeline)
+        return WI.GStreamerTabContentView;
 
     return null;
 };

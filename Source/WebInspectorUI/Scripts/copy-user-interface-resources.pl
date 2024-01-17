@@ -167,12 +167,14 @@ my $workersDir = File::Spec->catdir($targetResourcePath, 'Workers');
 my $codeMirrorPath = File::Spec->catdir($uiRoot, 'External', 'CodeMirror');
 my $esprimaPath = File::Spec->catdir($uiRoot, 'External', 'Esprima');
 my $threejsPath = File::Spec->catdir($uiRoot, 'External', 'three.js');
+my $panZoomPath = File::Spec->catdir($uiRoot, 'External', 'PanZoom.js');
 
 $webInspectorUIAdditionsDir = &webInspectorUIAdditionsDir();
 
 my $codeMirrorLicense = readLicenseFile(File::Spec->catfile($codeMirrorPath, 'LICENSE'));
 my $esprimaLicense = readLicenseFile(File::Spec->catfile($esprimaPath, 'LICENSE'));
 my $threejsLicense = readLicenseFile(File::Spec->catfile($threejsPath, 'LICENSE'));
+my $panZoomLicense = readLicenseFile(File::Spec->catfile($panZoomPath, 'LICENSE'));
 make_path($protocolDir, $targetResourcePath);
 
 $python = $ENV{"PYTHON"} if defined($ENV{"PYTHON"});
@@ -183,6 +185,7 @@ copy(File::Spec->catfile($ENV{'JAVASCRIPTCORE_PRIVATE_HEADERS_DIR'}, 'InspectorB
 my $forceToolInstall = defined $ENV{'FORCE_TOOL_INSTALL'} && ($ENV{'FORCE_TOOL_INSTALL'} eq 'YES');
 my $shouldCombineMain = defined $ENV{'COMBINE_INSPECTOR_RESOURCES'} && ($ENV{'COMBINE_INSPECTOR_RESOURCES'} eq 'YES');
 my $shouldCombineTest = defined $ENV{'COMBINE_TEST_RESOURCES'} && ($ENV{'COMBINE_TEST_RESOURCES'} eq 'YES');
+my $shouldCombineGStreamerResources = defined $ENV{'COMBINE_GSTREAMER_RESOURCES'} && ($ENV{'COMBINE_GSTREAMER_RESOURCES'} eq 'YES');
 my $shouldIncludeBrowserInspectorFrontendHost = defined $ENV{'INCLUDE_BROWSER_INSPECTOR_FRONTEND_HOST'} && ($ENV{'INCLUDE_BROWSER_INSPECTOR_FRONTEND_HOST'} eq 'YES');
 my $combineResourcesCmd = File::Spec->catfile($scriptsRoot, 'combine-resources.pl');
 
@@ -362,6 +365,17 @@ if ($shouldCombineMain) {
        '--output-dir', $derivedSourcesDir,
        '--output-script-name', 'Three.js');
 
+    if ($shouldCombineGStreamerResources) {
+        # Combine the PanZoom.js JavaScript files in Production builds into a single file (PanZoom.js).
+        system($perl, $combineResourcesCmd,
+               '--input-dir', 'External/PanZoom.js',
+               '--input-html', $derivedSourcesMainHTML,
+               '--input-html-dir', $uiRoot,
+               '--derived-sources-dir', $derivedSourcesDir,
+               '--output-dir', $derivedSourcesDir,
+               '--output-script-name', 'PanZoom.js');
+    }
+
     # Remove console.assert calls from the Main.js file.
     my $derivedSourcesMainJS = File::Spec->catfile($derivedSourcesDir, 'Main.js');
     system($perl, File::Spec->catfile($scriptsRoot, 'remove-console-asserts.pl'),
@@ -421,6 +435,18 @@ if ($shouldCombineMain) {
     # Minify the Three.js file, appending to the license that was exported above.
     my $derivedSourcesThreejsJS = File::Spec->catfile($derivedSourcesDir, 'Three.js');
     system(qq("$python" "$jsMinScript" < "$derivedSourcesThreejsJS" >> "$targetThreejsJS")) and die "Failed to minify $derivedSourcesThreejsJS: $!";
+
+    my $targetPanZoomJS = File::Spec->catfile($targetResourcePath, 'PanZoom.js');
+    if ($shouldCombineGStreamerResources) {
+        # Export the license into PanZoom.js.
+        seedFile($targetPanZoomJS, $panZoomLicense);
+
+        # Minify the PanZoom.js file, appending to the license that was exported above.
+        my $derivedSourcesPanZoomJS = File::Spec->catfile($derivedSourcesDir, 'PanZoom.js');
+        system(qq("$python" "$jsMinScript" < "$derivedSourcesPanZoomJS" >> "$targetPanZoomJS")) and die "Failed to minify $derivedSourcesPanZoomJS: $!";
+    } else {
+        seedFile($targetPanZoomJS, "");
+    }
 
     # Copy over the Images directory.
     ditto(File::Spec->catdir($uiRoot, 'Images'), File::Spec->catdir($targetResourcePath, 'Images'));

@@ -36,6 +36,10 @@
 #include <wtf/Noncopyable.h>
 #include <wtf/RefCounted.h>
 
+#if USE(GSTREAMER)
+#include "InspectorGStreamerAgent.h"
+#endif
+
 namespace Inspector {
 class InspectorAgent;
 class InspectorDebuggerAgent;
@@ -162,6 +166,11 @@ public:
     InspectorAnimationAgent* trackingInspectorAnimationAgent() const { return m_trackingInspectorAnimationAgent; }
     void setTrackingInspectorAnimationAgent(InspectorAnimationAgent* agent) { m_trackingInspectorAnimationAgent = agent; }
 
+#if USE(GSTREAMER)
+    InspectorGStreamerAgent* persistentInspectorGStreamerAgent() const { return m_persistentInspectorGStreamerAgent; }
+    void setPersistentInspectorGStreamerAgent(InspectorGStreamerAgent* agent) { m_persistentInspectorGStreamerAgent = agent; }
+#endif
+
 private:
     InstrumentingAgents(Inspector::InspectorEnvironment&);
 
@@ -195,6 +204,9 @@ private:
     InspectorAnimationAgent* m_persistentInspectorAnimationAgent { nullptr };
     InspectorAnimationAgent* m_enabledInspectorAnimationAgent { nullptr };
     InspectorAnimationAgent* m_trackingInspectorAnimationAgent { nullptr };
+#if USE(GSTREAMER)
+    InspectorGStreamerAgent* m_persistentInspectorGStreamerAgent { nullptr };
+#endif
 };
 
 } // namespace WebCore

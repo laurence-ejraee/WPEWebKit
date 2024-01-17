@@ -313,8 +313,12 @@ MediaPlayerPrivateGStreamer::~MediaPlayerPrivateGStreamer()
 
     // The change to GST_STATE_NULL state is always synchronous. So after this gets executed we don't need to worry
     // about handlers running in the GStreamer thread.
-    if (m_pipeline)
+    if (m_pipeline) {
+        unregisterPipeline(m_pipeline.get());
         gst_element_set_state(m_pipeline.get(), GST_STATE_NULL);
+        if (m_player)
+            m_player->gstreamerActivePipelinesChanged();
+    }
 
     m_player = nullptr;
     m_notifier->invalidate();
@@ -1639,6 +1643,10 @@ void MediaPlayerPrivateGStreamer::setPipeline(GstElement* pipeline)
 {
     m_pipeline = pipeline;
 
+    registerActivePipeline(m_pipeline.get());
+    if (m_player)
+        m_player->gstreamerActivePipelinesChanged();
+
     GRefPtr<GstBus> bus = adoptGRef(gst_pipeline_get_bus(GST_PIPELINE(m_pipeline.get())));
     gst_bus_set_sync_handler(bus.get(), [](GstBus*, GstMessage* message, gpointer userData) {
         auto& player = *static_cast<MediaPlayerPrivateGStreamer*>(userData);
@@ -2904,6 +2912,9 @@ void MediaPlayerPrivateGStreamer::createGSTPlayBin(const URL& url, const String&
         }
 
         GST_INFO_OBJECT(pipeline(), "Tearing down as we need to use %s now.", playbinName);
+        unregisterPipeline(m_pipeline.get());
+        if (m_player)
+            m_player->gstreamerActivePipelinesChanged();
         changePipelineState(GST_STATE_NULL);
         m_pipeline = nullptr;
     }
@@ -3024,6 +3035,9 @@ void MediaPlayerPrivateGStreamer::readyTimerFired()
 {
     GST_DEBUG_OBJECT(pipeline(), "In READY for too long. Releasing pipeline resources.");
     changePipelineState(GST_STATE_NULL);
+    unregisterPipeline(m_pipeline.get());
+    if (m_player)
+        m_player->gstreamerActivePipelinesChanged();
 }
 
 void MediaPlayerPrivateGStreamer::acceleratedRenderingStateChanged()

@@ -114,9 +114,12 @@ AppendPipeline::AppendPipeline(SourceBufferPrivateGStreamer& sourceBufferPrivate
     // FIXME: give a name to the pipeline, maybe related with the track it's managing.
     // The track name is still unknown at this time, though.
     static size_t appendPipelineCount = 0;
-    String pipelineName = makeString("append-pipeline-",
+    // String pipelineName = makeString("append-pipeline-",
+    String pipelineName = makeString("mse-append-pipeline-",
         m_sourceBufferPrivate.type().containerType().replace("/", "-"), '-', appendPipelineCount++);
     m_pipeline = gst_pipeline_new(pipelineName.utf8().data());
+    registerActivePipeline(m_pipeline.get());
+    m_playerPrivate->mediaPlayer()->gstreamerActivePipelinesChanged();
 
     m_bus = adoptGRef(gst_pipeline_get_bus(GST_PIPELINE(m_pipeline.get())));
     gst_bus_add_signal_watch_full(m_bus.get(), RunLoopSourcePriority::RunLoopDispatcher);
@@ -246,6 +249,9 @@ AppendPipeline::~AppendPipeline()
     // when changing the pipeline state.
 
     if (m_pipeline) {
+        unregisterPipeline(m_pipeline.get());
+        // if (m_playerPrivate)
+        //     m_playerPrivate->mediaPlayer()->gstreamerActivePipelinesChanged();
         ASSERT(m_bus);
         g_signal_handlers_disconnect_by_data(m_bus.get(), this);
         gst_bus_disable_sync_message_emission(m_bus.get());

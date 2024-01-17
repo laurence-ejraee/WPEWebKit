@@ -30,6 +30,8 @@
 
 #include "AudioContext.h"
 #include "AudioDestination.h"
+#include "Document.h"
+#include "InspectorInstrumentation.h"
 #include "Logging.h"
 #include "MediaStrategy.h"
 #include "PlatformStrategies.h"
@@ -79,6 +81,11 @@ void DefaultAudioDestinationNode::uninitialize()
     m_destination = nullptr;
     m_numberOfInputChannels = 0;
 
+#if USE(GSTREAMER)
+    if (auto* document = context().document())
+        InspectorInstrumentation::gstreamerActivePipelinesChanged(*document);
+#endif
+
     AudioNode::uninitialize();
 }
 
@@ -88,6 +95,11 @@ void DefaultAudioDestinationNode::createDestination()
     LOG(WebAudio, ">>>> hardwareSampleRate = %f\n", hardwareSampleRate);
 
     m_destination = platformStrategies()->mediaStrategy().createAudioDestination(*this, m_inputDeviceId, m_numberOfInputChannels, channelCount(), hardwareSampleRate);
+
+#if USE(GSTREAMER)
+    if (auto* document = context().document())
+        InspectorInstrumentation::gstreamerActivePipelinesChanged(*document);
+#endif
 }
 
 void DefaultAudioDestinationNode::enableInput(const String& inputDeviceId)

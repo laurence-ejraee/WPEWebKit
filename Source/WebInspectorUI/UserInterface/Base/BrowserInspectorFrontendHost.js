@@ -62,7 +62,7 @@ if (!window.InspectorFrontendHost) {
 
         get port()
         {
-            return "unknown";
+            return "wpe";
         }
 
         get platform()

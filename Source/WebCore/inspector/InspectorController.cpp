@@ -88,6 +88,10 @@
 #include "PageDebuggable.h"
 #endif
 
+#if USE(GSTREAMER)
+#include "InspectorGStreamerAgent.h"
+#endif
+
 namespace WebCore {
 
 using namespace JSC;
@@ -187,6 +191,10 @@ void InspectorController::createLazyAgents()
     m_agents.append(makeUnique<InspectorCanvasAgent>(pageContext));
     m_agents.append(makeUnique<InspectorTimelineAgent>(pageContext));
     m_agents.append(makeUnique<InspectorAnimationAgent>(pageContext));
+
+#if USE(GSTREAMER)
+    m_agents.append(makeUnique<InspectorGStreamerAgent>(pageContext));
+#endif
 
     if (auto& commandLineAPIHost = m_injectedScriptManager->commandLineAPIHost())
         commandLineAPIHost->init(m_instrumentingAgents.copyRef());

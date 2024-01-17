@@ -142,6 +142,8 @@ public:
     static MediaPlayer::SupportsType extendedSupportsType(const MediaEngineSupportParameters&, MediaPlayer::SupportsType);
     static bool supportsKeySystem(const String& keySystem, const String& mimeType);
 
+    MediaPlayer* mediaPlayer() const { return m_player; }
+
     bool hasVideo() const final { return m_hasVideo; }
     bool hasAudio() const final { return m_hasAudio; }
     void load(const String &url) override;

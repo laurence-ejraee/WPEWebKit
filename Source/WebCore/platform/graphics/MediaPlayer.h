@@ -264,6 +264,7 @@ public:
 
 #if USE(GSTREAMER)
     virtual void requestInstallMissingPlugins(const String&, const String&, MediaPlayerRequestInstallMissingPluginsCallback&) { };
+    virtual void gstreamerActivePipelinesChanged() { };
 #endif
 
     virtual bool mediaPlayerShouldDisableSleep() const { return false; }
@@ -634,6 +635,7 @@ public:
 
 #if USE(GSTREAMER)
     void requestInstallMissingPlugins(const String& details, const String& description, MediaPlayerRequestInstallMissingPluginsCallback& callback) { client().requestInstallMissingPlugins(details, description, callback); }
+    void gstreamerActivePipelinesChanged() { client().gstreamerActivePipelinesChanged(); }
 #endif
 
     void platformHide();

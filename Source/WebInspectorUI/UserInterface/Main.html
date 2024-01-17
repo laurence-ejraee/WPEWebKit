@@ -112,6 +112,7 @@
     <link rel="stylesheet" href="Views/FontResourceContentView.css">
     <link rel="stylesheet" href="Views/FormattedValue.css">
     <link rel="stylesheet" href="Views/GaugeChart.css">
+    <link rel="stylesheet" href="Views/GStreamerTabContentView.css">
     <link rel="stylesheet" href="Views/GeneralStyleDetailsSidebarPanel.css">
     <link rel="stylesheet" href="Views/GoToLineDialog.css">
     <link rel="stylesheet" href="Views/GradientEditor.css">
@@ -288,6 +289,8 @@
     <script src="External/three.js/three.js"></script>
     <script src="External/three.js/OrbitControls.js"></script>
 
+    <script src="External/PanZoom.js/panzoom.js"></script>
+
     <script src="Base/WebInspector.js"></script>
     <script src="Base/BrowserInspectorFrontendHost.js"></script>
     <script src="Base/Platform.js"></script>
@@ -342,6 +345,7 @@
     <script src="Protocol/DOMStorageObserver.js"></script>
     <script src="Protocol/DatabaseObserver.js"></script>
     <script src="Protocol/DebuggerObserver.js"></script>
+    <script src="Protocol/GStreamerObserver.js"></script>
     <script src="Protocol/HeapObserver.js"></script>
     <script src="Protocol/InspectorObserver.js"></script>
     <script src="Protocol/LayerTreeObserver.js"></script>
@@ -500,6 +504,8 @@
     <script src="Models/AuditTestCaseResult.js"></script>
     <script src="Models/AuditTestGroupResult.js"></script>
 
+    <script src="Models/GStreamerPipeline.js"></script>
+
     <script src="Proxies/FormatterWorkerProxy.js"></script>
     <script src="Proxies/HeapSnapshotDiffProxy.js"></script>
     <script src="Proxies/HeapSnapshotEdgeProxy.js"></script>
@@ -577,6 +583,7 @@
     <script src="Views/ConsoleTabContentView.js"></script>
     <script src="Views/ElementsTabContentView.js"></script>
     <script src="Views/GraphicsTabContentView.js"></script>
+    <script src="Views/GStreamerTabContentView.js"></script>
     <script src="Views/LayersTabContentView.js"></script>
     <script src="Views/ResourceTreeElement.js"></script>
     <script src="Views/ScriptTreeElement.js"></script>
@@ -591,6 +598,9 @@
     <script src="Views/DetailsSectionGroup.js"></script>
     <script src="Views/DetailsSectionSimpleRow.js"></script>
     <script src="Views/DetailsSectionTextRow.js"></script>
+
+    <script src="Views/GStreamerSidebarPanel.js"></script>
+    <script src="Views/GStreamerView.js"></script>
 
     <script src="Views/SettingEditor.js"></script>
     <script src="Views/SettingsGroup.js"></script>
@@ -894,6 +904,7 @@
     <script src="Controllers/DebuggerManager.js"></script>
     <script src="Controllers/DragToAdjustController.js"></script>
     <script src="Controllers/FormatterSourceMap.js"></script>
+    <script src="Controllers/GStreamerManager.js"></script>
     <script src="Controllers/HARBuilder.js"></script>
     <script src="Controllers/HeapManager.js"></script>
     <script src="Controllers/IndexedDBManager.js"></script>

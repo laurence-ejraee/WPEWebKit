@@ -30,9 +30,12 @@
 #include <gst/audio/audio-info.h>
 #include <gst/gst.h>
 #include <mutex>
+#include <wtf/HashMap.h>
+#include <wtf/NeverDestroyed.h>
 #include <wtf/glib/GLibUtilities.h>
 #include <wtf/glib/GUniquePtr.h>
 #include <wtf/glib/RunLoopSourcePriority.h>
+#include <wtf/text/StringHash.h>
 
 #if ENABLE(VIDEO_TRACK) && USE(GSTREAMER_MPEGTS)
 #define GST_USE_UNSTABLE_API
@@ -417,6 +420,150 @@ bool isGStreamerPluginAvailable(const char* name)
     if (!plugin)
         GST_WARNING("Plugin %s not found. Please check your GStreamer installation", name);
     return plugin;
+}
+
+static HashMap<CString, GstBin*>& activePipelinesMap()
+{
+    static NeverDestroyed<HashMap<CString, GstBin*>> activePipelines;
+    return activePipelines.get();
+}
+
+void registerActivePipeline(GstElement* pipeline)
+{
+    ASSERT(GST_IS_ELEMENT(pipeline));
+    ASSERT(isMainThread());
+
+    GUniquePtr<gchar> name(gst_object_get_name(GST_OBJECT_CAST(pipeline)));
+    auto addResult = activePipelinesMap().add(name.get(), nullptr);
+    if (!addResult.isNewEntry)
+        return;
+    addResult.iterator->value = GST_BIN_CAST(pipeline);
+}
+
+void unregisterPipeline(GstElement* pipeline)
+{
+    ASSERT(GST_IS_ELEMENT(pipeline));
+
+    GUniquePtr<gchar> name(gst_object_get_name(GST_OBJECT_CAST(pipeline)));
+    activePipelinesMap().remove(name.get());
+}
+
+Vector<CString> activePipelinesNames()
+{
+    Vector<CString> names;
+    auto& map = activePipelinesMap();
+    names.reserveInitialCapacity(map.size());
+    for (auto& name : map.keys())
+        names.uncheckedAppend(name);
+
+    std::sort(names.begin(), names.end());
+    return names;
+}
+
+struct DotCallbacksData {
+    WTF_MAKE_FAST_ALLOCATED;
+public:
+    DotCallbacksData(WTF::Function<void(Ref<SharedBuffer>&&)>&& callback, WTF::Function<void(const String&)>&& errorCallback)
+        : callback(WTFMove(callback))
+        , errorCallback(WTFMove(errorCallback)) { }
+
+    WTF::Function<void(Ref<SharedBuffer>&&)> callback;
+    WTF::Function<void(const String&)> errorCallback;
+};
+
+static void onDotCommunicateComplete(GObject* process, GAsyncResult* result, gpointer data)
+{
+    std::unique_ptr<DotCallbacksData> callbacksData(reinterpret_cast<DotCallbacksData*>(data));
+    GRefPtr<GBytes> outputBytes;
+    GUniqueOutPtr<GError> error;
+    g_subprocess_communicate_finish(G_SUBPROCESS(process), result, &outputBytes.outPtr(), nullptr, &error.outPtr());
+
+    if (error) {
+        callbacksData->errorCallback(makeString("Failed to communicate with the dot process: ", error->message));
+        return;
+    }
+
+    if (!g_subprocess_get_successful(G_SUBPROCESS(process))) {
+        callbacksData->errorCallback(makeString("The dot process returned an error exit code: ", g_subprocess_get_exit_status(G_SUBPROCESS(process))));
+        return;
+    }
+
+    callbacksData->callback(SharedBuffer::create(outputBytes.leakRef()));
+}
+
+void exportBinToSVG(GstBin* bin, WTF::Function<void(Ref<SharedBuffer>&&)>&& callback, WTF::Function<void(const String&)>&& errorCallback)
+{
+    // All this code mimicks the following command: cat dotData | dot -Tsvg > result.svg.
+    Vector<CString> args = { "dot", "-Tsvg" };
+    int nargs = args.size() + 1;
+    int i = 0;
+    char** argv = g_newa(char*, nargs);
+    for (const auto& arg : args)
+        argv[i++] = const_cast<char*>(arg.data());
+    argv[i] = nullptr;
+
+    GRefPtr<GSubprocessLauncher> launcher = adoptGRef(g_subprocess_launcher_new(static_cast<GSubprocessFlags>(G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE)));
+
+    GUniqueOutPtr<GError> error;
+    GRefPtr<GSubprocess> process = adoptGRef(g_subprocess_launcher_spawnv(launcher.get(), argv, &error.outPtr()));
+    if (!process.get()) {
+        errorCallback(makeString("Failed to start Graphviz dot process: ", error->message));
+        return;
+    }
+
+    GUniquePtr<gchar> dotData(gst_debug_bin_to_dot_data(bin, GST_DEBUG_GRAPH_SHOW_ALL));
+    GRefPtr<GBytes> inputBytes = adoptGRef(g_bytes_new(dotData.get(), strlen(dotData.get())));
+    auto callbacksData = makeUnique<DotCallbacksData>(WTFMove(callback), WTFMove(errorCallback));
+    g_subprocess_communicate_async(process.get(), inputBytes.get(), nullptr, onDotCommunicateComplete, callbacksData.release());
+}
+
+void dumpActivePipeline(const String& name, const String& subBinName, WTF::Function<void(Ref<SharedBuffer>&&)>&& callback, WTF::Function<void(const String&)>&& errorCallback)
+{
+    GstBin* pipeline = activePipelinesMap().get(name.utf8());
+    if (!pipeline) {
+        errorCallback(makeString("No active pipeline named ", name));
+        return;
+    }
+
+    if (subBinName.isEmpty()) {
+        exportBinToSVG(pipeline, WTFMove(callback), WTFMove(errorCallback));
+        return;
+    }
+
+    GRefPtr<GstElement> child = adoptGRef(gst_bin_get_by_name(pipeline, subBinName.utf8().data()));
+    if (GST_IS_BIN(child.get())) {
+        exportBinToSVG(GST_BIN_CAST(child.get()), WTFMove(callback), WTFMove(errorCallback));
+        return;
+    }
+
+    errorCallback(makeString("No bin named ", subBinName, " in pipeline ", name));
+}
+
+Vector<CString> getBinChildren(const String& pipelineName, const String& binName)
+{
+    Vector<CString> children;
+    GstBin* pipeline = activePipelinesMap().get(pipelineName.utf8());
+    if (!pipeline)
+        return children;
+
+    GRefPtr<GstElement> parent;
+
+    if (binName.isEmpty())
+        parent = GST_ELEMENT_CAST(gst_object_ref(pipeline));
+    else
+        parent = adoptGRef(gst_bin_get_by_name(pipeline, binName.utf8().data()));
+
+    if (!parent || !GST_IS_BIN(parent.get()))
+        return children;
+
+    for (GList* item = GST_BIN_CHILDREN(GST_BIN_CAST(parent.get())); item; item = item->next) {
+        if (GST_IS_BIN(item->data)) {
+            GUniquePtr<gchar> name(gst_element_get_name(GST_ELEMENT_CAST(item->data)));
+            children.append(CString(name.get()));
+        }
+    }
+
+    return children;
 }
 
 }

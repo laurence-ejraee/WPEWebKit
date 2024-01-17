@@ -84,10 +84,6 @@
 #include <stdio.h>
 #endif
 
-#if USE(GSTREAMER)
-#include "GStreamerCommon.h"
-#endif
-
 #if PLATFORM(IOS_FAMILY)
 #include "ScriptController.h"
 #include "Settings.h"

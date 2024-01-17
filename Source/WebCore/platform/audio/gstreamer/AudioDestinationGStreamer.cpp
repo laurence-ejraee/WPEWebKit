@@ -26,6 +26,7 @@
 #include "AudioChannel.h"
 #include "AudioSourceProvider.h"
 #include "GRefPtrGStreamer.h"
+#include "GStreamerCommon.h"
 #include "Logging.h"
 #include "WebKitWebAudioSourceGStreamer.h"
 #include <gst/audio/gstaudiobasesink.h>
@@ -92,7 +93,8 @@ AudioDestinationGStreamer::AudioDestinationGStreamer(AudioIOCallback& callback, 
     , m_sampleRate(sampleRate)
     , m_isPlaying(false)
 {
-    m_pipeline = gst_pipeline_new("play");
+    m_pipeline = gst_pipeline_new("webaudio-playback");
+    registerActivePipeline(m_pipeline);
     GRefPtr<GstBus> bus = adoptGRef(gst_pipeline_get_bus(GST_PIPELINE(m_pipeline)));
     ASSERT(bus);
     gst_bus_add_signal_watch_full(bus.get(), RunLoopSourcePriority::RunLoopDispatcher);
@@ -151,8 +153,8 @@ AudioDestinationGStreamer::~AudioDestinationGStreamer()
     GRefPtr<GstBus> bus = adoptGRef(gst_pipeline_get_bus(GST_PIPELINE(m_pipeline)));
     ASSERT(bus);
     g_signal_handlers_disconnect_by_func(bus.get(), reinterpret_cast<gpointer>(messageCallback), this);
+    unregisterPipeline(m_pipeline);
     gst_bus_remove_signal_watch(bus.get());
-
     gst_element_set_state(m_pipeline, GST_STATE_NULL);
     gst_object_unref(m_pipeline);
 }

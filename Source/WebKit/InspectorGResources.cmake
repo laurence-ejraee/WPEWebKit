@@ -9,6 +9,7 @@ macro(WEBKIT_BUILD_INSPECTOR_GRESOURCES _derived_sources_dir)
         ${CMAKE_SOURCE_DIR}/Source/WebInspectorUI/UserInterface/External/CodeMirror/*.css
         ${CMAKE_SOURCE_DIR}/Source/WebInspectorUI/UserInterface/External/CodeMirror/*.js
         ${CMAKE_SOURCE_DIR}/Source/WebInspectorUI/UserInterface/External/Esprima/*.js
+        ${CMAKE_SOURCE_DIR}/Source/WebInspectorUI/UserInterface/External/PanZoom.js/*.js
         ${CMAKE_SOURCE_DIR}/Source/WebInspectorUI/UserInterface/External/three.js/*.js
         ${CMAKE_SOURCE_DIR}/Source/WebInspectorUI/UserInterface/Models/*.js
         ${CMAKE_SOURCE_DIR}/Source/WebInspectorUI/UserInterface/Protocol/*.js
@@ -64,13 +65,19 @@ macro(WEBKIT_BUILD_INSPECTOR_GRESOURCES _derived_sources_dir)
       set(INCLUDE_BROWSER_INSPECTOR_FRONTEND_HOST NO)
     endif ()
 
+    if (USE_GSTREAMER)
+        set(COMBINE_GSTREAMER_RESOURCES YES)
+    else ()
+        set(COMBINE_GSTREAMER_RESOURCES NO)
+    endif ()
+
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/inspector-resources.stamp
         DEPENDS ${InspectorFilesDependencies}
                 ${InspectorResourceScripts}
                 ${DERIVED_SOURCES_WEBINSPECTORUI_DIR}/UserInterface/Protocol/InspectorBackendCommands.js
         COMMAND cp ${DERIVED_SOURCES_WEBINSPECTORUI_DIR}/UserInterface/Protocol/InspectorBackendCommands.js ${FORWARDING_HEADERS_DIR}/JavaScriptCore/Scripts
-        COMMAND ${CMAKE_COMMAND} -E env "DERIVED_SOURCES_DIR=${DERIVED_SOURCES_WEBINSPECTORUI_DIR}" "SRCROOT=${CMAKE_SOURCE_DIR}/Source/WebInspectorUI" "JAVASCRIPTCORE_PRIVATE_HEADERS_DIR=${FORWARDING_HEADERS_DIR}/JavaScriptCore/Scripts" "TARGET_BUILD_DIR=${_derived_sources_dir}/InspectorResources" "UNLOCALIZED_RESOURCES_FOLDER_PATH=WebInspectorUI" "COMBINE_INSPECTOR_RESOURCES=${COMBINE_INSPECTOR_RESOURCES}" "COMBINE_TEST_RESOURCES=${COMBINE_TEST_RESOURCES}" "INCLUDE_BROWSER_INSPECTOR_FRONTEND_HOST=${INCLUDE_BROWSER_INSPECTOR_FRONTEND_HOST}" PYTHON=${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/Source/WebInspectorUI/Scripts/copy-user-interface-resources.pl
+        COMMAND ${CMAKE_COMMAND} -E env "DERIVED_SOURCES_DIR=${DERIVED_SOURCES_WEBINSPECTORUI_DIR}" "SRCROOT=${CMAKE_SOURCE_DIR}/Source/WebInspectorUI" "JAVASCRIPTCORE_PRIVATE_HEADERS_DIR=${FORWARDING_HEADERS_DIR}/JavaScriptCore/Scripts" "TARGET_BUILD_DIR=${_derived_sources_dir}/InspectorResources" "UNLOCALIZED_RESOURCES_FOLDER_PATH=WebInspectorUI" "COMBINE_GSTREAMER_RESOURCES=${COMBINE_GSTREAMER_RESOURCES}" "COMBINE_INSPECTOR_RESOURCES=${COMBINE_INSPECTOR_RESOURCES}" "COMBINE_TEST_RESOURCES=${COMBINE_TEST_RESOURCES}" "INCLUDE_BROWSER_INSPECTOR_FRONTEND_HOST=${INCLUDE_BROWSER_INSPECTOR_FRONTEND_HOST}" PYTHON=${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/Source/WebInspectorUI/Scripts/copy-user-interface-resources.pl
         COMMAND mkdir -p ${_derived_sources_dir}/InspectorResources/WebInspectorUI/Localizations/en.lproj
         COMMAND cp ${CMAKE_SOURCE_DIR}/Source/WebInspectorUI/Localizations/en.lproj/localizedStrings.js ${_derived_sources_dir}/InspectorResources/WebInspectorUI/Localizations/en.lproj/localizedStrings.js
         COMMAND touch ${CMAKE_BINARY_DIR}/inspector-resources.stamp

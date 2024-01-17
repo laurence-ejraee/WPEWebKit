@@ -7215,6 +7215,11 @@ void HTMLMediaElement::requestInstallMissingPlugins(const String& details, const
 
     document().page()->chrome().client().requestInstallMissingMediaPlugins(details, description, callback);
 }
+
+void HTMLMediaElement::gstreamerActivePipelinesChanged()
+{
+    InspectorInstrumentation::gstreamerActivePipelinesChanged(document());
+}
 #endif
 
 void HTMLMediaElement::removeBehaviorRestrictionsAfterFirstUserGesture(MediaElementSession::BehaviorRestrictions mask)

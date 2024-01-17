@@ -758,6 +758,7 @@ private:
 
 #if USE(GSTREAMER)
     void requestInstallMissingPlugins(const String& details, const String& description, MediaPlayerRequestInstallMissingPluginsCallback&) final;
+    void gstreamerActivePipelinesChanged() final;
 #endif
 
     void pendingActionTimerFired();

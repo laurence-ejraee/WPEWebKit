@@ -1,0 +1,108 @@
+/*
+ *  Copyright (C) 2020 Igalia S.L
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+.sidebar > .panel.navigation.gstreamer > .content {
+    top: var(--navigation-bar-height);
+}
+
+.sidebar > .panel.navigation.gstreamer > .navigation-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+.sidebar > .panel.navigation.gstreamer > .navigation-bar .gstreamer-breakpoints {
+    fill: none;
+    stroke: var(--glyph-color);
+}
+.sidebar > .panel.navigation.gstreamer > .navigation-bar .gstreamer-breakpoints.activated {
+    fill: var(--glyph-color-active);
+    stroke: var(--glyph-color-active);
+}
+
+.sidebar > .panel.navigation.gstreamer > .navigation-bar .gstreamer-pause-resume {
+    fill: none;
+    stroke: var(--glyph-color);
+}
+.sidebar > .panel.navigation.gstreamer > .navigation-bar .gstreamer-pause-resume.activated {
+    stroke: var(--glyph-color-active);
+}
+
+.sidebar > .panel.navigation.gstreamer .warning-banner {
+    text-align: center;
+    font-size: 11px;
+
+    padding: 11px 6px;
+    margin-bottom: 6px;
+
+    border-bottom: 1px solid var(--border-color);
+    background-color: hsl(50, 100%, 94%);
+}
+
+.sidebar > .panel.navigation.gstreamer .tree-outline.single-thread > .item.thread {
+    display: none;
+}
+
+.sidebar > .panel.navigation.gstreamer .tree-outline.single-thread {
+    --tree-outline-single-thread-margin-start: -10px;
+}
+
+body[dir=ltr] .sidebar > .panel.navigation.gstreamer .tree-outline.single-thread {
+    margin-left: var(--tree-outline-single-thread-margin-start);
+}
+
+body[dir=rtl] .sidebar > .panel.navigation.gstreamer .tree-outline.single-thread {
+    margin-right: var(--tree-outline-single-thread-margin-start);
+}
+
+.sidebar > .panel.navigation.gstreamer .warning-banner > a {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.sidebar > .panel.navigation.gstreamer .details-section {
+    font-size: 11px;
+}
+
+.sidebar > .panel.navigation.gstreamer .details-section.paused-reason.collapsed > .header > .options {
+    display: block;
+}
+
+.sidebar > .panel.navigation.gstreamer .details-section > .content {
+    display: block;
+}
+
+.sidebar > .panel.navigation.gstreamer .details-section.collapsed > .content {
+    display: none;
+}
+
+.sidebar > .panel.navigation.gstreamer .details-section > .content > .group {
+    display: block;
+}
+
+.sidebar > .panel.navigation.gstreamer .details-section.scripts:not(.collapsed) {
+    border-bottom: none;
+}
+
+@media (prefers-dark-interface) {
+    .sidebar > .panel.navigation.gstreamer .warning-banner {
+        background-color: var(--yellow-highlight-background-color);
+        color: var(--yellow-highlight-text-color);
+    }
+}

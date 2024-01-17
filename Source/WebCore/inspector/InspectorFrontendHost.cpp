@@ -342,6 +342,8 @@ String InspectorFrontendHost::port() const
 {
 #if PLATFORM(GTK)
     return "gtk"_s;
+#elif PLATFORM(WPE)
+    return "wpe"_s;
 #else
     return "unknown"_s;
 #endif

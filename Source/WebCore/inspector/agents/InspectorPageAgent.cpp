@@ -81,6 +81,9 @@
 #include "LegacyWebArchive.h"
 #endif
 
+#if USE(GSTREAMER)
+#include "GStreamerCommon.h"
+#endif
 
 namespace WebCore {
 

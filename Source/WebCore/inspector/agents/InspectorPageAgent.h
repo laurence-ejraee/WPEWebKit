@@ -134,6 +134,7 @@ public:
     void didLayout();
     void didScroll();
     void didRecalculateStyle();
+    void gstreamerPipelineCacheUpdated();
 
     Frame* frameForId(const String& frameId);
     WEBCORE_EXPORT String frameId(Frame*);

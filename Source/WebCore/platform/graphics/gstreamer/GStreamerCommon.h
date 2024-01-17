@@ -296,6 +296,12 @@ enum class GstVideoDecoderPlatform { ImxVPU, Video4Linux, OpenMAX };
 
 bool isGStreamerPluginAvailable(const char* name);
 
+void registerActivePipeline(GstElement*);
+void unregisterPipeline(GstElement*);
+Vector<CString> activePipelinesNames();
+void dumpActivePipeline(const String& name, const String& subBinName, WTF::Function<void(Ref<SharedBuffer>&&)>&& callback, WTF::Function<void(const String& errorMessage)>&& errorCallback);
+Vector<CString> getBinChildren(const String& pipelineName, const String& binName);
+
 }
 
 #ifndef GST_BUFFER_DTS_OR_PTS
