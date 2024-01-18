@@ -32,4 +32,6 @@ typedef (FetchRequest or USVString) RequestInfo;
     EnabledAtRuntime=FetchAPI,
 ] partial interface DOMWindow {
     Promise<FetchResponse> fetch(RequestInfo input, optional FetchRequestInit init);
+    [JSBuiltin] boolean isNetworkConnected();
+    [JSBuiltin] void addNetworkStateChangeListener(any func, DOMString url, long timeout);
 };

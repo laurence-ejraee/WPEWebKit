@@ -264,6 +264,8 @@ namespace WebCore {
     macro(document) \
     macro(failureKind) \
     macro(fetch) \
+    macro(isNetworkConnected) \
+    macro(addNetworkStateChangeListener) \
     macro(fetchRequest) \
     macro(fillFromJS) \
     macro(finishConsumingStream) \
