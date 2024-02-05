@@ -194,9 +194,8 @@ void MemoryPressureHandler::measurementTimerFired()
 {
 #if OS(LINUX)
     auto& memoryPressureHandler = MemoryPressureHandler::singleton();
-
-    size_t footprintGFX = memoryPressureHandler.GetUsedGpuRam();
-    int percentGFX = memoryPressureHandler.GetUsedGpuPercent();
+    size_t footprintGFX = memoryPressureHandler.usedGfxMemory();
+    int percentGFX = memoryPressureHandler.usedGfxPercent();
     RELEASE_LOG(MemoryPressure, "Current GFX memory usage: %zu MB %d%%", footprintGFX / MB, percentGFX);
 #endif
 

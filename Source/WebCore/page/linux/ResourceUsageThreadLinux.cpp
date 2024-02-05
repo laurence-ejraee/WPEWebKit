@@ -29,6 +29,7 @@
 
 #if ENABLE(RESOURCE_USAGE) && OS(LINUX)
 
+// #include "MemoryCache.h"
 #include <JavaScriptCore/GCActivityCallback.h>
 #include <JavaScriptCore/VM.h>
 #include <errno.h>
@@ -178,10 +179,23 @@ void ResourceUsageThread::platformCollectMemoryData(JSC::VM* vm, ResourceUsageDa
     data.categories[MemoryCategory::GCHeap].dirtySize = currentGCHeapCapacity;
     data.categories[MemoryCategory::GCOwned].dirtySize = currentGCOwnedExtra - currentGCOwnedExternal;
     data.categories[MemoryCategory::GCOwned].externalSize = currentGCOwnedExternal;
+
+    // int imagesDecodedSize = 0;
+    // callOnMainThreadAndWait([&imagesDecodedSize] {
+    //     imagesDecodedSize = MemoryCache::singleton().getStatistics().images.decodedSize;
+        // fprintf(stdout, "\n\nlejraee imagesDecodedSize = %d  liveSize = %d  size = %d\n\n", imagesDecodedSize, MemoryCache::singleton().getStatistics().images.liveSize, 
+            // MemoryCache::singleton().getStatistics().images.size);
+    // });
+    // data.categories[MemoryCategory::Images].dirtySize = imagesDecodedSize;
+    // fprintf(stdout, "\n\nlejraee [MemoryCategory::Images].dirtySize = %lu\n\n", data.categories[MemoryCategory::Images].dirtySize);
+    // fflush(stdout);
+
     size_t categoriesTotalSize = 0;
     for (auto& category : data.categories)
         categoriesTotalSize += category.totalSize();
     data.categories[MemoryCategory::Other].dirtySize = data.totalDirtySize - categoriesTotalSize;
+    // fprintf(stdout, "\n\nlejraee [MemoryCategory::Other].dirtySize = %lu\n\n", data.categories[MemoryCategory::Other].dirtySize);
+    // fflush(stdout);
 
     data.totalExternalSize = currentGCOwnedExternal;
 

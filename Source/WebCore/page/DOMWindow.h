@@ -57,6 +57,7 @@ class CSSRuleList;
 class CSSStyleDeclaration;
 class Crypto;
 class CustomElementRegistry;
+class Diagnostics;
 class DOMApplicationCache;
 class DOMSelection;
 class DOMWindowProperty;
@@ -167,6 +168,7 @@ public:
     Screen& screen();
     History& history();
     Crypto& crypto() const;
+    Diagnostics& diagnostics() const;
     BarProp& locationbar();
     BarProp& menubar();
     BarProp& personalbar();
@@ -432,6 +434,7 @@ private:
     HashSet<Observer*> m_observers;
 
     mutable RefPtr<Crypto> m_crypto;
+    mutable RefPtr<Diagnostics> m_diagnostics;
     mutable RefPtr<History> m_history;
     mutable RefPtr<BarProp> m_locationbar;
     mutable RefPtr<StyleMedia> m_media;

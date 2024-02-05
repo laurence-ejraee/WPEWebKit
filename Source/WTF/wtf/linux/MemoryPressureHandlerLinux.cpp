@@ -37,6 +37,8 @@
 #include <wtf/linux/CurrentProcessMemoryStatus.h>
 #include <wtf/text/WTFString.h>
 
+#include <vector>
+
 #define LOG_CHANNEL_PREFIX Log
 
 namespace WTF {
@@ -133,7 +135,7 @@ bool read_vmwgfx_used_memory(size_t &value)
 
 // Used GPU mem in bytes from s_GPUMemoryUsedFile
 // Get actual amount used by comparing with the initial GFX value.
-size_t MemoryPressureHandler::GetUsedGpuRam()
+size_t GetUsedGpuRam()
 {
     size_t value = 0;
     if (read_vmwgfx_used_memory(value))
@@ -146,8 +148,15 @@ size_t MemoryPressureHandler::GetUsedGpuRam()
     return value;
 }
 
+// Used GPU mem in bytes from s_GPUMemoryUsedFile
+// Get actual amount used by comparing with the initial GFX value.
+size_t MemoryPressureHandler::usedGfxMemory()
+{
+    return GetUsedGpuRam();
+}
+
 // Used GPU mem converted to a percentage of the limit set by WPE_POLL_MAX_MEMORY_GPU
-int MemoryPressureHandler::GetUsedGpuPercent()
+int MemoryPressureHandler::usedGfxPercent()
 {
     int percent = 0;
     size_t value = GetUsedGpuRam();
@@ -170,9 +179,8 @@ static String getProcessName()
     return result;
 }
 
-
 // Used WebProcess mem in bytes
-bool MemoryPressureHandler::GetUsedWebProcMem(size_t& value)
+bool MemoryPressureHandler::usedWebProcMemory(size_t& value)
 {
     // Method applies only to the WebProcess
     if (fnmatch("*WPEWebProcess", getProcessName().utf8().data(), 0))
@@ -184,24 +192,83 @@ bool MemoryPressureHandler::GetUsedWebProcMem(size_t& value)
 }
 
 // Used WebProcess mem as a percentage of s_pollMaximumProcessMemoryCriticalLimit
-bool MemoryPressureHandler::GetUsedWebProcPercent(int& percent)
+bool MemoryPressureHandler::usedWebProcPercent(int& percent)
+{
+    percent = 0;
+    size_t value = 0;
+
+    if (usedWebProcMemory(value) && s_pollMaximumProcessMemoryCriticalLimit) {
+        percent = (int) ((double)value / s_pollMaximumProcessMemoryCriticalLimit * 100);
+        return true;
+    }
+    return false;
+}
+
+
+// Diagnostics API start
+
+void MemoryPressureHandler::addRAMImage(String uniqueID, float memoryMB)
+{
+    String copy = String(uniqueID);
+    fprintf(stdout, "\n\nlejraee addRAMImage() UID: %s  mem: %fMB\n\n", copy.utf8().data(), memoryMB);
+    fflush(stdout);
+    m_ramImages[copy.utf8().data()] = memoryMB;
+}
+
+void MemoryPressureHandler::addGFXImage(String uniqueID, float memoryMB)
+{
+    String copy = String(uniqueID);
+    fprintf(stdout, "\n\nlejraee addGFXImage() UID: %s  mem: %fMB\n\n", copy.utf8().data(), memoryMB);
+    fflush(stdout);
+    m_gfxImages[copy.utf8().data()] = memoryMB;
+}
+
+bool MemoryPressureHandler::ramImagesEstimate(float& ramEstimate)
 {
     // Method applies only to the WebProcess
     if (fnmatch("*WPEWebProcess", getProcessName().utf8().data(), 0))
         return false;
     
-    percent = 0;
-    size_t value = 0;
-    size_t value_swap = 0;
-
-    if (s_pollMaximumProcessMemoryCriticalLimit) {
-        if (readToken(s_processStatus, "VmRSS:", KB, value) && readToken(s_processStatus, "VmSwap:", KB, value_swap)) {
-            value += value_swap;
-            percent = (int) ((double)value / s_pollMaximumProcessMemoryCriticalLimit * 100);
-        }
+    ramEstimate = 0.0f;
+    for (const auto& item : m_ramImages) {
+        fprintf(stdout, "\n\nlejraee RAM UID: %s  mem: %fMB\n\n", item.first.c_str(), item.second);
+        fflush(stdout);
+        if (m_gfxImages.count(item.first)) {
+            fprintf(stdout, "\n\nlejraee RAM UID: %s  FOUND IN GFX so NOT adding to RAM total\n\n", item.first.c_str());
+            fflush(stdout);
+        } else
+            ramEstimate += item.second;
     }
     return true;
 }
+
+bool MemoryPressureHandler::gfxImagesEstimate(float& gfxEstimate)
+{
+    // Method applies only to the WebProcess
+    if (fnmatch("*WPEWebProcess", getProcessName().utf8().data(), 0))
+        return false;
+
+    gfxEstimate = 0.0f;
+    for (const auto& item : m_gfxImages) {
+        fprintf(stdout, "\n\nlejraee GFX UID: %s  mem: %fMB\n\n", item.first.c_str(), item.second);
+        fflush(stdout);
+        gfxEstimate += item.second;
+    }
+    return true;
+}
+
+void logGFXImages()
+{
+    float ramEstimate = 0.0f; 
+    float gfxEstimate = 0.0f;
+    if (MemoryPressureHandler::singleton().ramImagesEstimate(ramEstimate) && MemoryPressureHandler::singleton().gfxImagesEstimate(gfxEstimate)) {
+        fprintf(stdout, "\n\nlejraee ramEstimate: %fMB  gfxEstimate: %fMB\n\n", ramEstimate, gfxEstimate);
+        fflush(stdout);
+    }
+}
+
+// Diagnostics API end
+
 
 // Initialises the process memory limit vars in bytes
 static bool initializeProcessMemoryLimits(size_t &criticalLimit, size_t &nonCriticalLimit)
@@ -334,6 +401,12 @@ MemoryPressureHandler::MemoryUsagePoller::MemoryUsagePoller()
     m_context = adoptRef(new MemoryPressureHandler::MemoryUsagePollerThreadContext());
     m_thread = Thread::create("WTF: MemoryPressureHandler", [this, context = m_context] {
         do {
+
+            // TEMP
+            logGFXImages();
+            //
+
+
             bool underMemoryPressure = false;
             bool critical = false;
             bool synchronous = false;
@@ -353,7 +426,7 @@ MemoryPressureHandler::MemoryUsagePoller::MemoryUsagePoller()
             }
 
             if (s_pollMaximumProcessGPUMemoryCriticalLimit) {
-                size_t value = MemoryPressureHandler::singleton().GetUsedGpuRam();
+                size_t value = GetUsedGpuRam();
                 if (value) {
                     if (value > s_pollMaximumProcessGPUMemoryNonCriticalLimit) {
                         //underMemoryPressure = true;

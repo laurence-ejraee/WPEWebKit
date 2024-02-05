@@ -140,6 +140,9 @@ void InspectorMemoryAgent::collectSample(const ResourceUsageData& data)
         .setSize(data.categories[MemoryCategory::bmalloc].totalSize() + data.categories[MemoryCategory::LibcMalloc].totalSize())
         .release();
 
+    // fprintf(stdout, "\n\nlejraee MemoryCategory::bmalloc.totalSize() = %lu  MemoryCategory::LibcMalloc.totalSize() = %lu\n\n", data.categories[MemoryCategory::bmalloc].totalSize(), data.categories[MemoryCategory::LibcMalloc].totalSize());
+    // fflush(stdout);
+
     auto otherCategory = Protocol::Memory::CategoryData::create()
         .setType(Protocol::Memory::CategoryData::Type::Other)
         .setSize(data.categories[MemoryCategory::Other].totalSize())

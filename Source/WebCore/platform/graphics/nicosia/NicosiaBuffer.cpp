@@ -44,6 +44,9 @@ Buffer::Buffer(const WebCore::IntSize& size, Flags flags)
 {
     auto checkedArea = size.area() * 4;
     m_data = MallocPtr<unsigned char>::tryZeroedMalloc(checkedArea.unsafeGet());
+
+    // fprintf(stdout, "\n\nlejraee s_currentLayersMemoryUsage = %f\n\n", s_currentLayersMemoryUsage);
+    // fflush(stdout);
 }
 
 Buffer::~Buffer() = default;

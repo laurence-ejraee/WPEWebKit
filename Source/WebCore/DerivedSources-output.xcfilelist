@@ -328,6 +328,8 @@ $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSCredentialsContainer.cpp
 $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSCredentialsContainer.h
 $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSCrypto.cpp
 $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSCrypto.h
+$(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSDiagnostics.cpp
+$(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSDiagnostics.h
 $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSCryptoAesKeyAlgorithm.cpp
 $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSCryptoAesKeyAlgorithm.h
 $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSCryptoAlgorithmParameters.cpp
@@ -689,6 +691,8 @@ $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSGetAnimationsOptions.cpp
 $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSGetAnimationsOptions.h
 $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSGlobalCrypto.cpp
 $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSGlobalCrypto.h
+$(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSGlobalDiagnostics.cpp
+$(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSGlobalDiagnostics.h
 $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSGlobalEventHandlers.cpp
 $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSGlobalEventHandlers.h
 $(BUILT_PRODUCTS_DIR)/DerivedSources/WebCore/JSGlobalPerformance.cpp

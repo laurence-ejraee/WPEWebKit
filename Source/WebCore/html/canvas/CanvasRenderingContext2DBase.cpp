@@ -1750,6 +1750,8 @@ ExceptionOr<void> CanvasRenderingContext2DBase::drawImage(ImageBitmap& imageBitm
 
 void CanvasRenderingContext2DBase::drawImageFromRect(HTMLImageElement& imageElement, float sx, float sy, float sw, float sh, float dx, float dy, float dw, float dh, const String& compositeOperation)
 {
+    fprintf(stdout, "\n\nlejraee %s drawImageFromRect()\n\n", __FILE__);
+    fflush(stdout);
     CompositeOperator op;
     auto blendOp = BlendMode::Normal;
     if (!parseCompositeAndBlendOperator(compositeOperation, op, blendOp) || blendOp != BlendMode::Normal)

@@ -87,8 +87,8 @@ void TextureMapperFPSCounter::updateMemAndDisplay(TextureMapper& textureMapper, 
     if (!m_isShowingMem)
         return;
 
-    size_t gfxValue = MemoryPressureHandler::singleton().GetUsedGpuRam();
-    int gfxPercent = MemoryPressureHandler::singleton().GetUsedGpuPercent();
+    size_t gfxValue = MemoryPressureHandler::singleton().usedGfxMemory();
+    int gfxPercent = MemoryPressureHandler::singleton().usedGfxPercent();
     size_t procValue = 0;
     int procPercent = 0;
 
@@ -97,10 +97,10 @@ void TextureMapperFPSCounter::updateMemAndDisplay(TextureMapper& textureMapper, 
         m_lastGfxMem = int(gfxValue / MB);
         m_lastGfxPercent = gfxPercent;
 
-        if (MemoryPressureHandler::singleton().GetUsedWebProcMem(procValue))
+        if (MemoryPressureHandler::singleton().usedWebProcMemory(procValue))
             m_lastProcMem = int(procValue / MB);
 
-        if (MemoryPressureHandler::singleton().GetUsedWebProcPercent(procPercent))
+        if (MemoryPressureHandler::singleton().usedWebProcPercent(procPercent))
             m_lastProcPercent = procPercent;
         
         m_memTimestamp += delta;

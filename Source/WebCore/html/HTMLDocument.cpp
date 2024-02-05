@@ -95,6 +95,10 @@ Ref<HTMLDocument> HTMLDocument::createSynthesizedDocument(Frame& frame, const UR
 HTMLDocument::HTMLDocument(Frame* frame, const URL& url, DocumentClassFlags documentClasses, unsigned constructionFlags)
     : Document(frame, url, documentClasses | HTMLDocumentClass, constructionFlags)
 {
+    fprintf(stdout, "\n\nlejraee HTMLDocument()\n\n");
+    fflush(stdout);
+    MemoryPressureHandler::singleton().clearRAMImages();
+    MemoryPressureHandler::singleton().clearGFXImages();
     clearXMLVersion();
 }
 

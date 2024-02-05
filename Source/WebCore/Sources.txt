@@ -1582,6 +1582,7 @@ page/Chrome.cpp
 page/ContextMenuContext.cpp
 page/ContextMenuController.cpp
 page/Crypto.cpp
+page/Diagnostics.cpp
 page/DOMSelection.cpp
 page/DOMTimer.cpp
 page/DOMWindow.cpp
@@ -2770,6 +2771,7 @@ JSCSSAnimation.cpp
 JSCSSTransition.cpp
 JSCustomElementRegistry.cpp
 JSCustomEvent.cpp
+JSDiagnostics.cpp
 JSDocumentTimeline.cpp
 JSDocumentTimelineOptions.cpp
 JSDOMApplicationCache.cpp
@@ -2918,6 +2920,7 @@ JSGeolocationCoordinates.cpp
 JSGeolocationPosition.cpp
 JSGeolocationPositionError.cpp
 JSGlobalCrypto.cpp
+JSGlobalDiagnostics.cpp
 JSGlobalEventHandlers.cpp
 JSGlobalPerformance.cpp
 JSHighlightMap.cpp

@@ -38,6 +38,10 @@
 #include <wtf/win/Win32Handle.h>
 #endif
 
+#if OS(LINUX)
+#include <map>
+#endif
+
 namespace WTF {
 
 enum class MemoryUsagePolicy {
@@ -69,10 +73,20 @@ public:
 #if OS(LINUX)
     WTF_EXPORT_PRIVATE void triggerMemoryPressureEvent(bool isCritical, bool isSynchronous);
     WTF_EXPORT_PRIVATE const char* getInitialGFX();
-    WTF_EXPORT_PRIVATE size_t GetUsedGpuRam();
-    WTF_EXPORT_PRIVATE int GetUsedGpuPercent();
-    WTF_EXPORT_PRIVATE bool GetUsedWebProcMem(size_t& value);
-    WTF_EXPORT_PRIVATE bool GetUsedWebProcPercent(int& percent);
+    WTF_EXPORT_PRIVATE size_t usedGfxMemory();
+    WTF_EXPORT_PRIVATE bool usedWebProcMemory(size_t& value);
+    WTF_EXPORT_PRIVATE int usedGfxPercent();
+    WTF_EXPORT_PRIVATE bool usedWebProcPercent(int& percent);
+    // Diagnostics API
+    WTF_EXPORT_PRIVATE void addRAMImage(String uniqueID, float memoryMB);
+    WTF_EXPORT_PRIVATE void addGFXImage(String uniqueID, float memoryMB);
+    WTF_EXPORT_PRIVATE void clearRAMImages() { m_ramImages.clear(); }
+    WTF_EXPORT_PRIVATE void clearGFXImages() { m_gfxImages.clear(); }
+    WTF_EXPORT_PRIVATE void imageRemoved(String uniqueID) { m_ramImages.erase(uniqueID.utf8().data()); m_gfxImages.erase(uniqueID.utf8().data()); }
+    WTF_EXPORT_PRIVATE void removeRAMImage(String uniqueID) { m_ramImages.erase(uniqueID.utf8().data()); }
+    WTF_EXPORT_PRIVATE void removeGFXImage(String uniqueID) { m_gfxImages.erase(uniqueID.utf8().data()); }
+    WTF_EXPORT_PRIVATE bool ramImagesEstimate(float& ramEstimate);
+    WTF_EXPORT_PRIVATE bool gfxImagesEstimate(float& gfxEstimate);
 #endif
 
     void setMemoryKillCallback(WTF::Function<void()>&& function) { m_memoryKillCallback = WTFMove(function); }
@@ -223,6 +237,10 @@ private:
     };
 
     std::unique_ptr<MemoryUsagePoller> m_memoryUsagePoller;
+
+    // Diagnostics API
+    std::map<std::string, float> m_ramImages;
+    std::map<std::string, float> m_gfxImages;
 #endif
 
 #if PLATFORM(COCOA)

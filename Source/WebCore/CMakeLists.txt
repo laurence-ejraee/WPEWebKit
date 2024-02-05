@@ -927,10 +927,12 @@ set(WebCore_NON_SVG_IDL_FILES
 
     page/BarProp.idl
     page/Crypto.idl
+    page/Diagnostics.idl
     page/DOMSelection.idl
     page/DOMWindow.idl
     page/EventSource.idl
     page/GlobalCrypto.idl
+    page/GlobalDiagnostics.idl
     page/GlobalPerformance.idl
     page/History.idl
     page/IntersectionObserver.idl
@@ -1863,6 +1865,7 @@ set(WebCore_BUILTINS_SOURCES
     ${WEBCORE_DIR}/Modules/streams/WritableStreamInternals.js
     ${WEBCORE_DIR}/Modules/fetch/DOMWindowFetch.js
     ${WEBCORE_DIR}/bindings/js/JSDOMBindingInternals.js
+    ${WEBCORE_DIR}/page/Diagnostics.js
 )
 
 set(BUILTINS_GENERATOR_SCRIPTS

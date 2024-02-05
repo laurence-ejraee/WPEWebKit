@@ -32,6 +32,7 @@
 #include "CSSValuePool.h"
 #include "ContentSecurityPolicy.h"
 #include "Crypto.h"
+#include "Diagnostics.h"
 #include "IDBConnectionProxy.h"
 #include "ImageBitmapOptions.h"
 #include "InspectorInstrumentation.h"
@@ -100,6 +101,7 @@ WorkerGlobalScope::~WorkerGlobalScope()
 
     m_performance = nullptr;
     m_crypto = nullptr;
+    m_diagnostics = nullptr;
 
     // Notify proxy that we are going away. This can free the WorkerThread object, so do not access it after this.
     thread().workerReportingProxy().workerGlobalScopeDestroyed();
@@ -489,6 +491,13 @@ Crypto& WorkerGlobalScope::crypto()
     if (!m_crypto)
         m_crypto = Crypto::create(this);
     return *m_crypto;
+}
+
+Diagnostics& WorkerGlobalScope::diagnostics()
+{
+    if (!m_diagnostics)
+        m_diagnostics = Diagnostics::create(this);
+    return *m_diagnostics;
 }
 
 Performance& WorkerGlobalScope::performance() const

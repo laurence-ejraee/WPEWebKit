@@ -154,6 +154,9 @@ GraphicsLayer::~GraphicsLayer()
 {
     resetTrackedRepaints();
     ASSERT(!m_parent); // willBeDestroyed should have been called already.
+
+    // fprintf(stdout, "\n\nlejraee ~GraphicsLayer()\n\n");
+    // fflush(stdout);
 }
 
 void GraphicsLayer::unparentAndClear(RefPtr<GraphicsLayer>& layer)
@@ -786,10 +789,17 @@ int GraphicsLayer::validateTransformOperations(const KeyframeValueList& valueLis
 
 double GraphicsLayer::backingStoreMemoryEstimate() const
 {
-    if (!drawsContent())
+    // fprintf(stdout, "\n\nlejraee backingStoreMemoryEstimate() %s %f x %f\n\n", debugName().utf8().data(), size().width(), size().height());
+    // fflush(stdout);
+    if (!drawsContent()) {
+        // fprintf(stdout, "\n\nlejraee backingStoreMemoryEstimate() 0\n\n");
+        // fflush(stdout);
         return 0;
+    }
     
     // Effects of page and device scale are ignored; subclasses should override to take these into account.
+    // fprintf(stdout, "\n\nlejraee backingStoreMemoryEstimate() %f\n\n", (static_cast<double>(4 * size().width()) * size().height() / MB));
+    // fflush(stdout);
     return static_cast<double>(4 * size().width()) * size().height();
 }
 

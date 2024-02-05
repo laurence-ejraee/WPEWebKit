@@ -40,6 +40,7 @@
 #include "ContentRuleListResults.h"
 #include "Crypto.h"
 #include "CustomElementRegistry.h"
+#include "Diagnostics.h"
 #include "DOMApplicationCache.h"
 #include "DOMSelection.h"
 #include "DOMStringList.h"
@@ -435,6 +436,7 @@ void DOMWindow::didSecureTransitionTo(Document& document)
     // The Window is being transferred from one document to another so we need to reset data
     // members that store the window's document (rather than the window itself).
     m_crypto = nullptr;
+    m_diagnostics = nullptr;
     m_navigator = nullptr;
     m_performance = nullptr;
 }
@@ -695,6 +697,14 @@ Crypto& DOMWindow::crypto() const
         m_crypto = Crypto::create(document());
     ASSERT(m_crypto->scriptExecutionContext() == document());
     return *m_crypto;
+}
+
+Diagnostics& DOMWindow::diagnostics() const
+{
+    if (!m_diagnostics)
+        m_diagnostics = Diagnostics::create(document());
+    ASSERT(m_diagnostics->scriptExecutionContext() == document());
+    return *m_diagnostics;
 }
 
 BarProp& DOMWindow::locationbar()

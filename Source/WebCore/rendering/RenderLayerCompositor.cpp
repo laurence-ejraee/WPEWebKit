@@ -462,6 +462,8 @@ void RenderLayerCompositor::willRecalcStyle()
 
 bool RenderLayerCompositor::didRecalcStyleWithNoPendingLayout()
 {
+    // fprintf(stdout, "\n\nlejraee updateCompositingLayers() B\n\n");
+    // fflush(stdout);
     return updateCompositingLayers(CompositingUpdateType::AfterStyleChange);
 }
 
@@ -667,6 +669,8 @@ void RenderLayerCompositor::scheduleCompositingLayerUpdate()
 
 void RenderLayerCompositor::updateCompositingLayersTimerFired()
 {
+    // fprintf(stdout, "\n\nlejraee updateCompositingLayers() A\n\n");
+    // fflush(stdout);
     updateCompositingLayers(CompositingUpdateType::AfterLayout);
 }
 
@@ -796,6 +800,9 @@ bool RenderLayerCompositor::updateCompositingLayers(CompositingUpdateType update
 
     // FIXME: optimize root-only update.
     if (updateRoot->hasDescendantNeedingCompositingRequirementsTraversal() || updateRoot->needsCompositingRequirementsTraversal()) {
+        // fprintf(stdout, "\n\nlejraee updateCompositingLayers() A CALL clearGFXImages()\n\n");
+        // fflush(stdout);
+        // MemoryPressureHandler::singleton().clearGFXImages(); // Diagnostics API
         auto& rootLayer = rootRenderLayer();
         CompositingState compositingState(updateRoot);
         BackingSharingState backingSharingState;
@@ -813,8 +820,11 @@ bool RenderLayerCompositor::updateCompositingLayers(CompositingUpdateType update
 
     if (updateRoot->hasDescendantNeedingUpdateBackingOrHierarchyTraversal() || updateRoot->needsUpdateBackingOrHierarchyTraversal()) {
         ScrollingTreeState scrollingTreeState = { 0, 0 };
-        if (!m_renderView.frame().isMainFrame())
+        if (!m_renderView.frame().isMainFrame()) {
+            // fprintf(stdout, "\n\nlejraee updateCompositingLayers() B\n\n");
+            // fflush(stdout);
             scrollingTreeState.parentNodeID = frameHostingNodeForFrame(m_renderView.frame());
+        }
 
         UpdateBackingTraversalState traversalState;
         Vector<Ref<GraphicsLayer>> childList;
@@ -1213,6 +1223,9 @@ void RenderLayerCompositor::traverseUnchangedSubtree(RenderLayer* ancestorLayer,
 
 void RenderLayerCompositor::updateBackingAndHierarchy(RenderLayer& layer, Vector<Ref<GraphicsLayer>>& childLayersOfEnclosingLayer, UpdateBackingTraversalState& traversalState, ScrollingTreeState& scrollingTreeState, OptionSet<UpdateLevel> updateLevel)
 {
+    // fprintf(stdout, "\n\nlejraee updateBackingAndHierarchy() store? \n\n");
+    // fflush(stdout);
+
     layer.updateDescendantDependentFlags();
     layer.updateLayerListsIfNeeded();
 
@@ -2124,6 +2137,8 @@ void RenderLayerCompositor::rootLayerConfigurationChanged()
 
 String RenderLayerCompositor::layerTreeAsText(LayerTreeFlags flags)
 {
+    // fprintf(stdout, "\n\nlejraee updateCompositingLayers() C\n\n");
+    // fflush(stdout);
     LOG_WITH_STREAM(Compositing, stream << "RenderLayerCompositor " << this << " layerTreeAsText");
     updateCompositingLayers(CompositingUpdateType::AfterLayout);
 

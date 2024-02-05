@@ -875,10 +875,12 @@ JS_BINDING_IDLS = \
     $(WebCore)/loader/appcache/DOMApplicationCache.idl \
     $(WebCore)/page/BarProp.idl \
     $(WebCore)/page/Crypto.idl \
+    $(WebCore)/page/Diagnostics.idl \
     $(WebCore)/page/DOMSelection.idl \
     $(WebCore)/page/DOMWindow.idl \
     $(WebCore)/page/EventSource.idl \
     $(WebCore)/page/GlobalCrypto.idl \
+    $(WebCore)/page/GlobalDiagnostics.idl \
     $(WebCore)/page/GlobalPerformance.idl \
     $(WebCore)/page/History.idl \
     $(WebCore)/page/IntersectionObserver.idl \
@@ -1799,6 +1801,7 @@ WebCore_BUILTINS_SOURCES = \
     $(WebCore)/Modules/streams/WritableStreamInternals.js \
     $(WebCore)/Modules/fetch/DOMWindowFetch.js
     $(WebCore)/bindings/js/JSDOMBindingInternals.js \
+    $(WebCore)/page/Diagnostics.js \
 #
 
 BUILTINS_GENERATOR_SCRIPTS = \

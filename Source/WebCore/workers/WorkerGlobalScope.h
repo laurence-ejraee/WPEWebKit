@@ -44,6 +44,7 @@ namespace WebCore {
 class CSSValuePool;
 class ContentSecurityPolicyResponseHeaders;
 class Crypto;
+class Diagnostics;
 class EventLoopTaskGroup;
 class Performance;
 class ScheduledAction;
@@ -126,6 +127,7 @@ public:
     SecurityOrigin& topOrigin() const final { return m_topOrigin.get(); }
 
     Crypto& crypto();
+    Diagnostics& diagnostics();
     Performance& performance() const;
 
     void prepareForTermination();
@@ -211,6 +213,7 @@ private:
 
     RefPtr<Performance> m_performance;
     mutable RefPtr<Crypto> m_crypto;
+    mutable RefPtr<Diagnostics> m_diagnostics;
 
     RefPtr<WorkerCacheStorageConnection> m_cacheStorageConnection;
     std::unique_ptr<WorkerMessagePortChannelProvider> m_messagePortChannelProvider;

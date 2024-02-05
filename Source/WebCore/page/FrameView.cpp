@@ -825,6 +825,8 @@ void FrameView::updateCompositingLayersAfterLayout()
     if (!renderView)
         return;
 
+    // fprintf(stdout, "\n\nlejraee FrameView call updateCompositingLayers A\n\n");
+    // fflush(stdout);
     renderView->compositor().updateCompositingLayers(CompositingUpdateType::AfterLayout);
 }
 

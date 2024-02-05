@@ -2971,6 +2971,8 @@ void Page::configureLoggingChannel(const String& channelName, WTFLogChannelState
 
 void Page::didFinishLoadingImageForElement(HTMLImageElement& element)
 {
+    // fprintf(stdout, "\n\nlejraee %s didFinishLoadingImageForElement()\n\n", __FILE__);
+    // fflush(stdout);
     auto protectedElement = makeRef(element);
     if (auto frame = makeRefPtr(element.document().frame()))
         frame->editor().revealSelectionIfNeededAfterLoadingImageForElement(element);

@@ -135,6 +135,10 @@ public:
 
     void evaluateDynamicMediaQueryDependencies();
 
+    // Diagnostics API
+    float memoryUsageEstimate() { return m_width * m_height * 4; } // Formula from GraphicsLayer::backingStoreMemoryEstimate()
+    void updateMemoryEstimate();
+
 protected:
     HTMLImageElement(const QualifiedName&, Document&, HTMLFormElement* = nullptr, bool createdByParser = false);
 
@@ -201,6 +205,9 @@ private:
     bool m_hadNameBeforeAttributeChanged { false }; // FIXME: We only need this because parseAttribute() can't see the old value.
     bool m_createdByParser { false };
     bool m_isDroppedImagePlaceholder { false };
+    // Diagnostics API
+    unsigned m_width { 0 };
+    unsigned m_height { 0 };
 
     RefPtr<EditableImageReference> m_editableImage;
     WeakPtr<HTMLPictureElement> m_pictureElement;

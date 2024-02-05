@@ -213,6 +213,7 @@ typedef USVString CSSOMString;
 };
 
 DOMWindow implements GlobalCrypto;
+DOMWindow implements GlobalDiagnostics;
 DOMWindow implements GlobalEventHandlers;
 DOMWindow implements GlobalPerformance;
 DOMWindow implements WindowEventHandlers;

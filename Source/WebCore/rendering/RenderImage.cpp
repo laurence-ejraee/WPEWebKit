@@ -137,9 +137,13 @@ RenderImage::RenderImage(Element& element, RenderStyle&& style, StyleImage* styl
     , m_imageResource(styleImage ? makeUnique<RenderImageResourceStyleImage>(*styleImage) : makeUnique<RenderImageResource>())
     , m_imageDevicePixelRatio(imageDevicePixelRatio)
 {
+    fprintf(stdout, "\n\nlejraee %s RenderImage() call updateMemoryEstimate()\n\n", __FILE__);
+    fflush(stdout);
     updateAltText();
-    if (is<HTMLImageElement>(element))
+    if (is<HTMLImageElement>(element)) {
         m_hasShadowControls = downcast<HTMLImageElement>(element).hasShadowControls();
+        downcast<HTMLImageElement>(element).updateMemoryEstimate(); // Diagnostics API
+    }
 }
 
 RenderImage::RenderImage(Document& document, RenderStyle&& style, StyleImage* styleImage)
@@ -155,6 +159,12 @@ RenderImage::~RenderImage()
 
 void RenderImage::willBeDestroyed()
 {
+    // Diagnostics API
+    fprintf(stdout, "\n\nlejraee ~RenderImage() \n\n");
+    fflush(stdout);
+    if (HTMLImageElement* imageElement = is<HTMLImageElement>(element()) ? downcast<HTMLImageElement>(element()) : nullptr)
+        MemoryPressureHandler::singleton().imageRemoved(imageElement->uniqueID());
+
     imageResource().shutdown();
     RenderReplaced::willBeDestroyed();
 }
@@ -214,6 +224,8 @@ ImageSizeChangeType RenderImage::setImageSizeForAltText(CachedImage* newImage /*
 
 bool RenderImage::isEditableImage() const
 {
+    // fprintf(stdout, "\n\nlejraee %s isEditableImage()\n\n", __FILE__);
+    // fflush(stdout);
     if (!element() || !is<HTMLImageElement>(element()))
         return false;
     return downcast<HTMLImageElement>(element())->hasEditableImageAttribute();
@@ -299,12 +311,16 @@ void RenderImage::updateIntrinsicSizeIfNeeded(const LayoutSize& newSize)
 
 void RenderImage::updateInnerContentRect()
 {
+    fprintf(stdout, "\n\nlejraee %s updateInnerContentRect() call updateMemoryEstimate()\n\n", __FILE__);
+    fflush(stdout);
     // Propagate container size to image resource.
     IntSize containerSize(replacedContentRect().size());
     if (!containerSize.isEmpty()) {
         URL imageSourceURL;
-        if (HTMLImageElement* imageElement = is<HTMLImageElement>(element()) ? downcast<HTMLImageElement>(element()) : nullptr)
+        if (HTMLImageElement* imageElement = is<HTMLImageElement>(element()) ? downcast<HTMLImageElement>(element()) : nullptr) {
             imageSourceURL = document().completeURL(imageElement->imageSourceURL());
+            imageElement->updateMemoryEstimate(); // Diagnostics API
+        }
         imageResource().setContainerContext(containerSize, imageSourceURL);
     }
 }
@@ -363,6 +379,8 @@ void RenderImage::repaintOrMarkForLayout(ImageSizeChangeType imageSizeChange, co
 
 void RenderImage::notifyFinished(CachedResource& newImage)
 {
+    // fprintf(stdout, "\n\nlejraee %s notifyFinished()\n\n", __FILE__);
+    // fflush(stdout);
     if (renderTreeBeingDestroyed())
         return;
 
@@ -622,6 +640,8 @@ void RenderImage::areaElementFocusChanged(HTMLAreaElement* element)
 
 ImageDrawResult RenderImage::paintIntoRect(PaintInfo& paintInfo, const FloatRect& rect)
 {
+    // fprintf(stdout, "\n\nlejraee %s paintIntoRect()\n\n", __FILE__);
+    // fflush(stdout);
     if (!imageResource().cachedImage() || imageResource().errorOccurred() || rect.width() <= 0 || rect.height() <= 0)
         return ImageDrawResult::DidNothing;
 
@@ -716,6 +736,8 @@ LayoutUnit RenderImage::minimumReplacedHeight() const
 
 HTMLMapElement* RenderImage::imageMap() const
 {
+    // fprintf(stdout, "\n\nlejraee %s imageMap()\n\n", __FILE__);
+    // fflush(stdout);
     auto* imageElement = element();
     if (!imageElement || !is<HTMLImageElement>(imageElement))
         return nullptr;

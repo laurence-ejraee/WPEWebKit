@@ -79,12 +79,16 @@ HTMLImageElement::HTMLImageElement(const QualifiedName& tagName, Document& docum
     , m_experimentalImageMenuEnabled(false)
     , m_createdByParser(createdByParser)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement() %u\n\n", width());
+    // fflush(stdout);
     ASSERT(hasTagName(imgTag));
     setHasCustomStyleResolveCallbacks();
 }
 
 Ref<HTMLImageElement> HTMLImageElement::create(Document& document)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement create()\n\n");
+    // fflush(stdout);
     return adoptRef(*new HTMLImageElement(imgTag, document));
 }
 
@@ -100,10 +104,16 @@ HTMLImageElement::~HTMLImageElement()
     if (m_form)
         m_form->removeImgElement(this);
     setPictureElement(nullptr);
+
+    fprintf(stdout, "\n\nlejraee ~HTMLImageElement() call imageRemoved() for %s\n\n", uniqueID().utf8().data());
+    fflush(stdout);
+    MemoryPressureHandler::singleton().imageRemoved(uniqueID()); // Diagnostics API
 }
 
 Ref<HTMLImageElement> HTMLImageElement::createForJSConstructor(Document& document, Optional<unsigned> width, Optional<unsigned> height)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement A  ");
+    // fflush(stdout);
     auto image = adoptRef(*new HTMLImageElement(imgTag, document));
     if (width)
         image->setWidth(width.value());
@@ -112,8 +122,21 @@ Ref<HTMLImageElement> HTMLImageElement::createForJSConstructor(Document& documen
     return image;
 }
 
+// Diagnostics API
+void HTMLImageElement::updateMemoryEstimate()
+{
+    width();
+    height();
+    float estimate = memoryUsageEstimate() / MB;
+    fprintf(stdout, "\n\nlejraee updateMemoryEstimate() %s  estimate = %f\n\n", uniqueID().utf8().data(), estimate);
+    fflush(stdout);
+    MemoryPressureHandler::singleton().addRAMImage(uniqueID(), estimate);
+}
+
 bool HTMLImageElement::isPresentationAttribute(const QualifiedName& name) const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement B  ");
+    // fflush(stdout);
     if (name == widthAttr || name == heightAttr || name == borderAttr || name == vspaceAttr || name == hspaceAttr || name == valignAttr)
         return true;
     return HTMLElement::isPresentationAttribute(name);
@@ -121,6 +144,8 @@ bool HTMLImageElement::isPresentationAttribute(const QualifiedName& name) const
 
 void HTMLImageElement::collectStyleForPresentationAttribute(const QualifiedName& name, const AtomString& value, MutableStyleProperties& style)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement C  ");
+    // fflush(stdout);
     if (name == widthAttr)
         addHTMLLengthToStyle(style, CSSPropertyWidth, value);
     else if (name == heightAttr)
@@ -143,11 +168,15 @@ void HTMLImageElement::collectStyleForPresentationAttribute(const QualifiedName&
 
 const AtomString& HTMLImageElement::imageSourceURL() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement D  ");
+    // fflush(stdout);
     return m_bestFitImageURL.isEmpty() ? attributeWithoutSynchronization(srcAttr) : m_bestFitImageURL;
 }
 
 void HTMLImageElement::setBestFitURLAndDPRFromImageCandidate(const ImageCandidate& candidate)
 {
+// fprintf(stdout, "\n\nlejraee HTMLImageElement E  ");
+// fflush(stdout);
     m_bestFitImageURL = candidate.string.toAtomString();
     m_currentSrc = AtomString(document().completeURL(imageSourceURL()).string());
     if (candidate.density >= 0)
@@ -158,6 +187,8 @@ void HTMLImageElement::setBestFitURLAndDPRFromImageCandidate(const ImageCandidat
 
 ImageCandidate HTMLImageElement::bestFitSourceFromPictureElement()
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement F  ");
+    // fflush(stdout);
     auto picture = makeRefPtr(pictureElement());
     if (!picture)
         return { };
@@ -204,6 +235,8 @@ ImageCandidate HTMLImageElement::bestFitSourceFromPictureElement()
 
 void HTMLImageElement::evaluateDynamicMediaQueryDependencies()
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement G  ");
+    // fflush(stdout);
     auto documentElement = makeRefPtr(document().documentElement());
     MediaQueryEvaluator evaluator { document().printing() ? "print" : "screen", document(), documentElement ? documentElement->computedStyle() : nullptr };
 
@@ -215,6 +248,8 @@ void HTMLImageElement::evaluateDynamicMediaQueryDependencies()
 
 void HTMLImageElement::selectImageSource()
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement H  ");
+    // fflush(stdout);
     m_mediaQueryDynamicResults = { };
     document().removeDynamicMediaQueryDependentImage(*this);
 
@@ -235,6 +270,8 @@ void HTMLImageElement::selectImageSource()
 
 void HTMLImageElement::parseAttribute(const QualifiedName& name, const AtomString& value)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement I  width: %u", width());
+    // fflush(stdout);
     if (name == altAttr) {
         if (is<RenderImage>(renderer()))
             downcast<RenderImage>(*renderer()).updateAltText();
@@ -281,6 +318,8 @@ void HTMLImageElement::parseAttribute(const QualifiedName& name, const AtomStrin
 
 const AtomString& HTMLImageElement::altText() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement J  ");
+    // fflush(stdout);
     // lets figure out the alt text.. magic stuff
     // http://www.w3.org/TR/1998/REC-html40-19980424/appendix/notes.html#altgen
     // also heavily discussed by Hixie on bugzilla
@@ -301,6 +340,8 @@ RenderPtr<RenderElement> HTMLImageElement::createElementRenderer(RenderStyle&& s
 
 bool HTMLImageElement::canStartSelection() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement L  ");
+    // fflush(stdout);
     if (shadowRoot())
         return HTMLElement::canStartSelection();
 
@@ -309,6 +350,8 @@ bool HTMLImageElement::canStartSelection() const
 
 bool HTMLImageElement::supportsFocus() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement M  ");
+    // fflush(stdout);
     if (hasEditableImageAttribute())
         return true;
     return HTMLElement::supportsFocus();
@@ -316,6 +359,8 @@ bool HTMLImageElement::supportsFocus() const
 
 bool HTMLImageElement::isFocusable() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement N  ");
+    // fflush(stdout);
     if (hasEditableImageAttribute())
         return true;
     return HTMLElement::isFocusable();
@@ -323,11 +368,15 @@ bool HTMLImageElement::isFocusable() const
 
 bool HTMLImageElement::isInteractiveContent() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement O  ");
+    // fflush(stdout);
     return hasAttributeWithoutSynchronization(usemapAttr);
 }
 
 void HTMLImageElement::didAttachRenderers()
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement P  ");
+    // fflush(stdout);
     if (!is<RenderImage>(renderer()))
         return;
     if (m_imageLoader->hasPendingBeforeLoadEvent())
@@ -351,6 +400,8 @@ void HTMLImageElement::didAttachRenderers()
 
 Node::InsertedIntoAncestorResult HTMLImageElement::insertedIntoAncestor(InsertionType insertionType, ContainerNode& parentOfInsertedTree)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement Q  ");
+    // fflush(stdout);
     if (m_formSetByParser) {
         m_form = WTFMove(m_formSetByParser);
         m_form->registerImgElement(this);
@@ -393,12 +444,21 @@ Node::InsertedIntoAncestorResult HTMLImageElement::insertedIntoAncestor(Insertio
 
 void HTMLImageElement::didFinishInsertingNode()
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement R  ");
+    // fflush(stdout);
     if (hasEditableImageAttribute())
         updateEditableImage();
+
+    // fprintf(stdout, "\n\nlejraee didFinishInsertingNode() %u\n\n", width());
+    // fflush(stdout);
 }
 
 void HTMLImageElement::removedFromAncestor(RemovalType removalType, ContainerNode& oldParentOfRemovedTree)
 {
+    fprintf(stdout, "\n\nlejraee removedFromAncestor() call imageRemoved() for %s\n\n", uniqueID().utf8().data());
+    fflush(stdout);
+    MemoryPressureHandler::singleton().imageRemoved(uniqueID()); // Diagnostics API
+
     if (m_form)
         m_form->removeImgElement(this);
 
@@ -417,6 +477,8 @@ void HTMLImageElement::removedFromAncestor(RemovalType removalType, ContainerNod
 
 bool HTMLImageElement::hasEditableImageAttribute() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement T  ");
+    // fflush(stdout);
     if (!document().settings().editableImagesEnabled())
         return false;
     return hasAttributeWithoutSynchronization(x_apple_editable_imageAttr);
@@ -424,6 +486,8 @@ bool HTMLImageElement::hasEditableImageAttribute() const
 
 GraphicsLayer::EmbeddedViewID HTMLImageElement::editableImageViewID() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement U  ");
+    // fflush(stdout);
     if (!m_editableImage)
         return 0;
     return m_editableImage->embeddedViewID();
@@ -431,6 +495,8 @@ GraphicsLayer::EmbeddedViewID HTMLImageElement::editableImageViewID() const
 
 void HTMLImageElement::updateEditableImage()
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement V  ");
+    // fflush(stdout);
     if (!document().settings().editableImagesEnabled())
         return;
 
@@ -473,37 +539,60 @@ void HTMLImageElement::updateEditableImage()
 
 HTMLPictureElement* HTMLImageElement::pictureElement() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement W  ");
+    // fflush(stdout);
     return m_pictureElement.get();
 }
     
 void HTMLImageElement::setPictureElement(HTMLPictureElement* pictureElement)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement X  ");
+    // fflush(stdout);
     m_pictureElement = makeWeakPtr(pictureElement);
 }
     
 unsigned HTMLImageElement::width(bool ignorePendingStylesheets)
 {
+    fprintf(stdout, "\n\nlejraee width()");
+    fflush(stdout);
+    
     if (!renderer()) {
+        fprintf(stdout, "\n\nlejraee width() A");
+        fflush(stdout);
         // check the attribute first for an explicit pixel value
         auto optionalWidth = parseHTMLNonNegativeInteger(attributeWithoutSynchronization(widthAttr));
-        if (optionalWidth)
-            return optionalWidth.value();
-
+        if (optionalWidth) {
+            m_width = optionalWidth.value();
+            return m_width;
+        }
         // if the image is available, use its width
-        if (m_imageLoader->image())
-            return m_imageLoader->image()->imageSizeForRenderer(renderer(), 1.0f).width().toUnsigned();
+        if (m_imageLoader->image()) {
+            m_width = m_imageLoader->image()->imageSizeForRenderer(renderer(), 1.0f).width().toUnsigned();
+            return m_width;
+        }
     }
 
     if (ignorePendingStylesheets)
         document().updateLayoutIgnorePendingStylesheets();
     else
         document().updateLayout();
+    
+    fprintf(stdout, "\n\nlejraee width() B");
+    fflush(stdout);
 
     RenderBox* box = renderBox();
-    if (!box)
-        return 0;
+    fprintf(stdout, "\n\nlejraee width() C");
+    fflush(stdout);
+    if (!box) {
+        m_width = 0;
+        return m_width;
+    }
+
     LayoutRect contentRect = box->contentBoxRect();
-    return adjustForAbsoluteZoom(snappedIntRect(contentRect).width(), *box);
+    fprintf(stdout, "\n\nlejraee width() D");
+    fflush(stdout);
+    m_width = adjustForAbsoluteZoom(snappedIntRect(contentRect).width(), *box);
+    return m_width;
 }
 
 unsigned HTMLImageElement::height(bool ignorePendingStylesheets)
@@ -511,12 +600,16 @@ unsigned HTMLImageElement::height(bool ignorePendingStylesheets)
     if (!renderer()) {
         // check the attribute first for an explicit pixel value
         auto optionalHeight = parseHTMLNonNegativeInteger(attributeWithoutSynchronization(heightAttr));
-        if (optionalHeight)
-            return optionalHeight.value();
+        if (optionalHeight) {
+            m_height = optionalHeight.value();
+            return m_height;
+        }
 
         // if the image is available, use its height
-        if (m_imageLoader->image())
-            return m_imageLoader->image()->imageSizeForRenderer(renderer(), 1.0f).height().toUnsigned();
+        if (m_imageLoader->image()) {
+            m_height = m_imageLoader->image()->imageSizeForRenderer(renderer(), 1.0f).height().toUnsigned();
+            return m_height;
+        }
     }
 
     if (ignorePendingStylesheets)
@@ -525,14 +618,19 @@ unsigned HTMLImageElement::height(bool ignorePendingStylesheets)
         document().updateLayout();
 
     RenderBox* box = renderBox();
-    if (!box)
-        return 0;
+    if (!box) {
+        m_height = 0;
+        return m_height;
+    }
     LayoutRect contentRect = box->contentBoxRect();
-    return adjustForAbsoluteZoom(snappedIntRect(contentRect).height(), *box);
+    m_height = adjustForAbsoluteZoom(snappedIntRect(contentRect).height(), *box);
+    return m_height;
 }
 
 float HTMLImageElement::effectiveImageDevicePixelRatio() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement Y  ");
+    // fflush(stdout);
     if (!m_imageLoader->image())
         return 1.0f;
 
@@ -546,6 +644,8 @@ float HTMLImageElement::effectiveImageDevicePixelRatio() const
 
 int HTMLImageElement::naturalWidth() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement Z  ");
+    // fflush(stdout);
     if (!m_imageLoader->image())
         return 0;
 
@@ -554,6 +654,8 @@ int HTMLImageElement::naturalWidth() const
 
 int HTMLImageElement::naturalHeight() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement A1  ");
+    // fflush(stdout);
     if (!m_imageLoader->image())
         return 0;
 
@@ -562,6 +664,8 @@ int HTMLImageElement::naturalHeight() const
 
 bool HTMLImageElement::isURLAttribute(const Attribute& attribute) const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement B1  ");
+    // fflush(stdout);
     return attribute.name() == srcAttr
         || attribute.name() == lowsrcAttr
         || attribute.name() == longdescAttr
@@ -571,12 +675,16 @@ bool HTMLImageElement::isURLAttribute(const Attribute& attribute) const
 
 bool HTMLImageElement::attributeContainsURL(const Attribute& attribute) const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement C1  ");
+    // fflush(stdout);
     return attribute.name() == srcsetAttr
         || HTMLElement::attributeContainsURL(attribute);
 }
 
 String HTMLImageElement::completeURLsInAttributeValue(const URL& base, const Attribute& attribute) const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement D1  ");
+    // fflush(stdout);
     if (attribute.name() == srcsetAttr) {
         Vector<ImageCandidate> imageCandidates = parseImageCandidatesFromSrcsetAttribute(StringView(attribute.value()));
         StringBuilder result;
@@ -596,21 +704,29 @@ String HTMLImageElement::completeURLsInAttributeValue(const URL& base, const Att
 
 bool HTMLImageElement::matchesUsemap(const AtomStringImpl& name) const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement E1  ");
+    // fflush(stdout);
     return m_parsedUsemap.impl() == &name;
 }
 
 HTMLMapElement* HTMLImageElement::associatedMapElement() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement F1  ");
+    // fflush(stdout);
     return treeScope().getImageMap(m_parsedUsemap);
 }
 
 const AtomString& HTMLImageElement::alt() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement G1  ");
+    // fflush(stdout);
     return attributeWithoutSynchronization(altAttr);
 }
 
 bool HTMLImageElement::draggable() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement H1  ");
+    // fflush(stdout);
     // Image elements are draggable by default.
     return !equalLettersIgnoringASCIICase(attributeWithoutSynchronization(draggableAttr), "false");
 }
@@ -618,25 +734,37 @@ bool HTMLImageElement::draggable() const
 void HTMLImageElement::setHeight(unsigned value)
 {
     setUnsignedIntegralAttribute(heightAttr, value);
+    m_height = value; // Diagnostics API
 }
 
 URL HTMLImageElement::src() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement I1  ");
+    // fflush(stdout);
     return document().completeURL(attributeWithoutSynchronization(srcAttr));
 }
 
 void HTMLImageElement::setSrc(const String& value)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement J1  ");
+    // fflush(stdout);
     setAttributeWithoutSynchronization(srcAttr, value);
 }
 
 void HTMLImageElement::setWidth(unsigned value)
 {
+    // fprintf(stdout, "\n\nlejraee setWidth() %u  UID: %s  memoryUsageEstimate() = %lu  estimateNewWidth: %u * %u * 6 = %u \n\n", value, uniqueID().utf8().data(), memoryUsageEstimate(), value, height(), (value * height() * 6));
+    // fflush(stdout);
     setUnsignedIntegralAttribute(widthAttr, value);
+    m_width = value; // Diagnostics API
+
+    // updateMemoryEstimate(); // Diagnostics API
 }
 
 int HTMLImageElement::x() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement K1  ");
+    // fflush(stdout);
     document().updateLayoutIgnorePendingStylesheets();
     auto renderer = this->renderer();
     if (!renderer)
@@ -648,6 +776,8 @@ int HTMLImageElement::x() const
 
 int HTMLImageElement::y() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement L1  ");
+    // fflush(stdout);
     document().updateLayoutIgnorePendingStylesheets();
     auto renderer = this->renderer();
     if (!renderer)
@@ -659,11 +789,15 @@ int HTMLImageElement::y() const
 
 bool HTMLImageElement::complete() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement M1  ");
+    // fflush(stdout);
     return m_imageLoader->imageComplete();
 }
 
 DecodingMode HTMLImageElement::decodingMode() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement N1  ");
+    // fflush(stdout);
     const AtomString& decodingMode = attributeWithoutSynchronization(decodingAttr);
     if (equalLettersIgnoringASCIICase(decodingMode, "sync"))
         return DecodingMode::Synchronous;
@@ -674,11 +808,15 @@ DecodingMode HTMLImageElement::decodingMode() const
     
 void HTMLImageElement::decode(Ref<DeferredPromise>&& promise)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement O1  ");
+    // fflush(stdout);
     return m_imageLoader->decode(WTFMove(promise));
 }
 
 void HTMLImageElement::addSubresourceAttributeURLs(ListHashSet<URL>& urls) const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement P1  ");
+    // fflush(stdout);
     HTMLElement::addSubresourceAttributeURLs(urls);
 
     addSubresourceURL(urls, document().completeURL(imageSourceURL()));
@@ -688,6 +826,8 @@ void HTMLImageElement::addSubresourceAttributeURLs(ListHashSet<URL>& urls) const
 
 void HTMLImageElement::didMoveToNewDocument(Document& oldDocument, Document& newDocument)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement Q1  ");
+    // fflush(stdout);
     oldDocument.removeDynamicMediaQueryDependentImage(*this);
 
     m_imageLoader->elementDidMoveToNewDocument();
@@ -696,6 +836,8 @@ void HTMLImageElement::didMoveToNewDocument(Document& oldDocument, Document& new
 
 bool HTMLImageElement::isServerMap() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement R1  ");
+    // fflush(stdout);
     if (!hasAttributeWithoutSynchronization(ismapAttr))
         return false;
 
@@ -710,11 +852,15 @@ bool HTMLImageElement::isServerMap() const
 
 void HTMLImageElement::setCrossOrigin(const AtomString& value)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement S1  ");
+    // fflush(stdout);
     setAttributeWithoutSynchronization(crossoriginAttr, value);
 }
 
 String HTMLImageElement::crossOrigin() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement T1  ");
+    // fflush(stdout);
     return parseCORSSettingsAttribute(attributeWithoutSynchronization(crossoriginAttr));
 }
 
@@ -848,6 +994,8 @@ bool HTMLImageElement::isSystemPreviewImage() const
 
 void HTMLImageElement::copyNonAttributePropertiesFromElement(const Element& source)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement U1  ");
+    // fflush(stdout);
     auto& sourceImage = static_cast<const HTMLImageElement&>(source);
 #if ENABLE(ATTACHMENT_ELEMENT)
     m_pendingClonedAttachmentID = !sourceImage.m_pendingClonedAttachmentID.isEmpty() ? sourceImage.m_pendingClonedAttachmentID : sourceImage.attachmentIdentifier();
@@ -858,6 +1006,8 @@ void HTMLImageElement::copyNonAttributePropertiesFromElement(const Element& sour
 
 void HTMLImageElement::defaultEventHandler(Event& event)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement V1  ");
+    // fflush(stdout);
     if (hasEditableImageAttribute() && event.type() == eventNames().mousedownEvent && is<MouseEvent>(event) && downcast<MouseEvent>(event).button() == LeftButton) {
         focus();
         event.setDefaultHandled();
@@ -868,21 +1018,29 @@ void HTMLImageElement::defaultEventHandler(Event& event)
 
 CachedImage* HTMLImageElement::cachedImage() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement W1  ");
+    // fflush(stdout);
     return m_imageLoader->image();
 }
 
 void HTMLImageElement::setLoadManually(bool loadManually)
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement X1  ");
+    // fflush(stdout);
     m_imageLoader->setLoadManually(loadManually);
 }
 
 bool HTMLImageElement::hasPendingActivity() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement Y1  ");
+    // fflush(stdout);
     return m_imageLoader->hasPendingActivity();
 }
 
 size_t HTMLImageElement::pendingDecodePromisesCountForTesting() const
 {
+    // fprintf(stdout, "\n\nlejraee HTMLImageElement Z1  ");
+    // fflush(stdout);
     return m_imageLoader->pendingDecodePromisesCountForTesting();
 }
 

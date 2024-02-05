@@ -568,6 +568,14 @@ bool RenderLayerBacking::needsIOSDumpRenderTreeMainFrameRenderViewLayerIsAlwaysO
 
 void RenderLayerBacking::destroyGraphicsLayers()
 {
+    // Diagnostics API
+    if (is<RenderImage>(renderer())) {
+        auto* imageElement = downcast<HTMLImageElement>(renderer().element());
+        fprintf(stdout, "\n\nlejraee RenderLayerBacking() destroyGraphicsLayers() call removeGFXImage()  UID: %s\n\n", imageElement->uniqueID().utf8().data());
+        fflush(stdout);
+        MemoryPressureHandler::singleton().removeGFXImage(imageElement->uniqueID());
+    }
+
     if (m_graphicsLayer) {
         m_graphicsLayer->setMaskLayer(nullptr);
         m_graphicsLayer->setReplicatedByLayer(nullptr);
@@ -3516,8 +3524,22 @@ CompositingLayerType RenderLayerBacking::compositingLayerType() const
 
 double RenderLayerBacking::backingStoreMemoryEstimate() const
 {
+    // if (is<RenderVideo>(renderer()) && downcast<RenderVideo>(renderer()).shouldDisplayVideo()) {
+    //     auto* mediaElement = downcast<HTMLMediaElement>(renderer().element());
+
+    // Diagnostics API
+    if (is<RenderImage>(renderer())) {
+        auto element = renderer().element();
+        if (is<HTMLImageElement>(element)) {
+            auto* imageElement = downcast<HTMLImageElement>(element);
+            fprintf(stdout, "\n\nlejraee backingStoreMemoryEstimate UID: %s CALL imageElement->memoryUsageEstimate(): %f\n\n", imageElement->uniqueID().utf8().data(), imageElement->memoryUsageEstimate());
+            fflush(stdout);
+            MemoryPressureHandler::singleton().addGFXImage(imageElement->uniqueID(), imageElement->memoryUsageEstimate() / MB);
+        }
+    }
+
     double backingMemory;
-    
+
     // Layers in m_ancestorClippingStack, m_contentsContainmentLayer and m_childContainmentLayer are just used for masking or containment, so have no backing.
     backingMemory = m_graphicsLayer->backingStoreMemoryEstimate();
     if (m_foregroundLayer)
@@ -3540,7 +3562,7 @@ double RenderLayerBacking::backingStoreMemoryEstimate() const
 
     if (m_layerForScrollCorner)
         backingMemory += m_layerForScrollCorner->backingStoreMemoryEstimate();
-    
+
     return backingMemory;
 }
 

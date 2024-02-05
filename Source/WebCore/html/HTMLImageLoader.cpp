@@ -68,6 +68,12 @@ String HTMLImageLoader::sourceURI(const AtomString& attr) const
 
 void HTMLImageLoader::notifyFinished(CachedResource&)
 {
+    // if (is<HTMLImageElement>(element())) {
+    //     fprintf(stdout, "\n\nlejraee notifyFinished() UID = %s  width: %u\n\n", downcast<HTMLImageElement>(element()).uniqueID().utf8().data(), 
+    //         downcast<HTMLImageElement>(element()).width());
+    //     fflush(stdout);
+    // }
+
     ASSERT(image());
     CachedImage& cachedImage = *image();
 

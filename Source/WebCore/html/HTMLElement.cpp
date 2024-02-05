@@ -71,6 +71,9 @@
 #include <wtf/NeverDestroyed.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/text/CString.h>
+#include <wtf/UUID.h>
+
+#include "Diagnostics.h"
 
 namespace WebCore {
 
@@ -78,8 +81,22 @@ WTF_MAKE_ISO_ALLOCATED_IMPL(HTMLElement);
 
 using namespace HTMLNames;
 
+HTMLElement::HTMLElement(const QualifiedName& tagName, Document& document, ConstructionType type)
+    : StyledElement(tagName, document, type)
+{
+    ASSERT(tagName.localName().impl());
+
+    // Create uniqueID for the element
+    if (m_uniqueID.isEmpty())
+        m_uniqueID = createCanonicalUUIDString();
+}
+
 Ref<HTMLElement> HTMLElement::create(const QualifiedName& tagName, Document& document)
 {
+    // fprintf(stdout, "\n\nlejraee create ELement\n\n");
+    // fflush(stdout);
+    // fprintf(stdout, "\n\nlejraee create ELement %s\n\n", tagName.toString().utf8().data());
+    // fflush(stdout);
     return adoptRef(*new HTMLElement(tagName, document));
 }
 

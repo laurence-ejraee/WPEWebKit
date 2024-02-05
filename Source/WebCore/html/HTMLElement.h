@@ -122,8 +122,11 @@ public:
     String enterKeyHint() const;
     void setEnterKeyHint(const String& value);
 
+    const String& uniqueID() const { return m_uniqueID; }
+
 protected:
-    HTMLElement(const QualifiedName& tagName, Document&, ConstructionType);
+    // HTMLElement(const QualifiedName& tagName, Document&, ConstructionType);
+    HTMLElement(const QualifiedName& tagName, Document& document, ConstructionType type = CreateHTMLElement);
 
     void addHTMLLengthToStyle(MutableStyleProperties&, CSSPropertyID, const String& value);
     void addHTMLColorToStyle(MutableStyleProperties&, CSSPropertyID, const String& color);
@@ -156,13 +159,11 @@ private:
 
     static void populateEventHandlerNameMap(EventHandlerNameMap&, const QualifiedName* const table[], size_t tableSize);
     static EventHandlerNameMap createEventHandlerNameMap();
+
+    String m_uniqueID;
 };
 
-inline HTMLElement::HTMLElement(const QualifiedName& tagName, Document& document, ConstructionType type = CreateHTMLElement)
-    : StyledElement(tagName, document, type)
-{
-    ASSERT(tagName.localName().impl());
-}
+// HTMLElement(const QualifiedName& tagName, Document& document, ConstructionType type = CreateHTMLElement);
 
 template<size_t tableSize> inline void HTMLElement::populateEventHandlerNameMap(EventHandlerNameMap& map, const QualifiedName* const (&table)[tableSize])
 {
