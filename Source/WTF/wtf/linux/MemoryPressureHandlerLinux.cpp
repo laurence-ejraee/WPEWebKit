@@ -231,8 +231,8 @@ bool MemoryPressureHandler::ramImagesEstimate(float& ramEstimate)
     
     ramEstimate = 0.0f;
     for (const auto& item : m_ramImages) {
-        fprintf(stdout, "\n\nlejraee RAM UID: %s  mem: %fMB\n\n", item.first.c_str(), item.second);
-        fflush(stdout);
+        // fprintf(stdout, "\n\nlejraee RAM UID: %s  mem: %fMB\n\n", item.first.c_str(), item.second);
+        // fflush(stdout);
         if (m_gfxImages.count(item.first)) {
             fprintf(stdout, "\n\nlejraee RAM UID: %s  FOUND IN GFX so NOT adding to RAM total\n\n", item.first.c_str());
             fflush(stdout);
@@ -250,8 +250,8 @@ bool MemoryPressureHandler::gfxImagesEstimate(float& gfxEstimate)
 
     gfxEstimate = 0.0f;
     for (const auto& item : m_gfxImages) {
-        fprintf(stdout, "\n\nlejraee GFX UID: %s  mem: %fMB\n\n", item.first.c_str(), item.second);
-        fflush(stdout);
+        // fprintf(stdout, "\n\nlejraee GFX UID: %s  mem: %fMB\n\n", item.first.c_str(), item.second);
+        // fflush(stdout);
         gfxEstimate += item.second;
     }
     return true;
@@ -403,7 +403,7 @@ MemoryPressureHandler::MemoryUsagePoller::MemoryUsagePoller()
         do {
 
             // TEMP
-            logGFXImages();
+            // logGFXImages();
             //
 
 

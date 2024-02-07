@@ -574,6 +574,7 @@ void RenderLayerBacking::destroyGraphicsLayers()
         fprintf(stdout, "\n\nlejraee RenderLayerBacking() destroyGraphicsLayers() call removeGFXImage()  UID: %s\n\n", imageElement->uniqueID().utf8().data());
         fflush(stdout);
         MemoryPressureHandler::singleton().removeGFXImage(imageElement->uniqueID());
+        imageElement->setUsingGfx(false);
     }
 
     if (m_graphicsLayer) {
@@ -3535,6 +3536,7 @@ double RenderLayerBacking::backingStoreMemoryEstimate() const
             fprintf(stdout, "\n\nlejraee backingStoreMemoryEstimate UID: %s CALL imageElement->memoryUsageEstimate(): %f\n\n", imageElement->uniqueID().utf8().data(), imageElement->memoryUsageEstimate());
             fflush(stdout);
             MemoryPressureHandler::singleton().addGFXImage(imageElement->uniqueID(), imageElement->memoryUsageEstimate() / MB);
+            imageElement->setUsingGfx(true);
         }
     }
 

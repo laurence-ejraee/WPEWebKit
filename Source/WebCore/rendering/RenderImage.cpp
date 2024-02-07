@@ -137,12 +137,12 @@ RenderImage::RenderImage(Element& element, RenderStyle&& style, StyleImage* styl
     , m_imageResource(styleImage ? makeUnique<RenderImageResourceStyleImage>(*styleImage) : makeUnique<RenderImageResource>())
     , m_imageDevicePixelRatio(imageDevicePixelRatio)
 {
-    fprintf(stdout, "\n\nlejraee %s RenderImage() call updateMemoryEstimate()\n\n", __FILE__);
+    fprintf(stdout, "\n\nlejraee %s RenderImage() call updateMemoryEstimate() width() = %d\n\n", __FILE__, width().toUnsigned());
     fflush(stdout);
     updateAltText();
     if (is<HTMLImageElement>(element)) {
         m_hasShadowControls = downcast<HTMLImageElement>(element).hasShadowControls();
-        downcast<HTMLImageElement>(element).updateMemoryEstimate(); // Diagnostics API
+        downcast<HTMLImageElement>(element).updateMemoryEstimate(width().toUnsigned(), height().toUnsigned()); // Diagnostics API
     }
 }
 
@@ -162,8 +162,10 @@ void RenderImage::willBeDestroyed()
     // Diagnostics API
     fprintf(stdout, "\n\nlejraee ~RenderImage() \n\n");
     fflush(stdout);
-    if (HTMLImageElement* imageElement = is<HTMLImageElement>(element()) ? downcast<HTMLImageElement>(element()) : nullptr)
+    if (HTMLImageElement* imageElement = is<HTMLImageElement>(element()) ? downcast<HTMLImageElement>(element()) : nullptr) {
         MemoryPressureHandler::singleton().imageRemoved(imageElement->uniqueID());
+        imageElement->updateMemoryEstimate(0, 0); // When no RenderImage make element memory estimate 0
+    }
 
     imageResource().shutdown();
     RenderReplaced::willBeDestroyed();
@@ -311,7 +313,7 @@ void RenderImage::updateIntrinsicSizeIfNeeded(const LayoutSize& newSize)
 
 void RenderImage::updateInnerContentRect()
 {
-    fprintf(stdout, "\n\nlejraee %s updateInnerContentRect() call updateMemoryEstimate()\n\n", __FILE__);
+    fprintf(stdout, "\n\nlejraee %s updateInnerContentRect() call updateMemoryEstimate() width() = %d\n\n", __FILE__, width().toUnsigned());
     fflush(stdout);
     // Propagate container size to image resource.
     IntSize containerSize(replacedContentRect().size());
@@ -319,7 +321,7 @@ void RenderImage::updateInnerContentRect()
         URL imageSourceURL;
         if (HTMLImageElement* imageElement = is<HTMLImageElement>(element()) ? downcast<HTMLImageElement>(element()) : nullptr) {
             imageSourceURL = document().completeURL(imageElement->imageSourceURL());
-            imageElement->updateMemoryEstimate(); // Diagnostics API
+            imageElement->updateMemoryEstimate(width().toUnsigned(), height().toUnsigned()); // Diagnostics API
         }
         imageResource().setContainerContext(containerSize, imageSourceURL);
     }

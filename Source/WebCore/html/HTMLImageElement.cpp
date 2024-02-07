@@ -79,21 +79,23 @@ HTMLImageElement::HTMLImageElement(const QualifiedName& tagName, Document& docum
     , m_experimentalImageMenuEnabled(false)
     , m_createdByParser(createdByParser)
 {
-    // fprintf(stdout, "\n\nlejraee HTMLImageElement() %u\n\n", width());
-    // fflush(stdout);
+    fprintf(stdout, "\n\nlejraee HTMLImageElement()\n\n");
+    fflush(stdout);
     ASSERT(hasTagName(imgTag));
     setHasCustomStyleResolveCallbacks();
 }
 
 Ref<HTMLImageElement> HTMLImageElement::create(Document& document)
 {
-    // fprintf(stdout, "\n\nlejraee HTMLImageElement create()\n\n");
-    // fflush(stdout);
+    fprintf(stdout, "\n\nlejraee HTMLImageElement create() A\n\n");
+    fflush(stdout);
     return adoptRef(*new HTMLImageElement(imgTag, document));
 }
 
 Ref<HTMLImageElement> HTMLImageElement::create(const QualifiedName& tagName, Document& document, HTMLFormElement* form, bool createdByParser)
 {
+    fprintf(stdout, "\n\nlejraee HTMLImageElement create() B\n\n");
+    fflush(stdout);
     return adoptRef(*new HTMLImageElement(tagName, document, form, createdByParser));
 }
 
@@ -123,15 +125,33 @@ Ref<HTMLImageElement> HTMLImageElement::createForJSConstructor(Document& documen
 }
 
 // Diagnostics API
-void HTMLImageElement::updateMemoryEstimate()
+
+void HTMLImageElement::updateMemoryEstimate(const unsigned width, const unsigned height)
 {
-    width();
-    height();
+    m_width = width;
+    m_height = height;
     float estimate = memoryUsageEstimate() / MB;
-    fprintf(stdout, "\n\nlejraee updateMemoryEstimate() %s  estimate = %f\n\n", uniqueID().utf8().data(), estimate);
+    fprintf(stdout, "\n\nlejraee updateMemoryEstimate() %s  estimate = %f, m_width = %u, m_height = %u\n\n", uniqueID().utf8().data(), estimate, m_width, m_height);
     fflush(stdout);
     MemoryPressureHandler::singleton().addRAMImage(uniqueID(), estimate);
+    m_memoryEstimate = estimate;
 }
+
+float HTMLImageElement::estimatedRam()
+{
+    if (!m_usingGfx)
+        return m_memoryEstimate;
+    return 0.0f;
+}
+
+float HTMLImageElement::estimatedGfx()
+{
+    if (m_usingGfx)
+        return m_memoryEstimate;
+    return 0.0f;
+}
+
+// Diagnostics API end
 
 bool HTMLImageElement::isPresentationAttribute(const QualifiedName& name) const
 {

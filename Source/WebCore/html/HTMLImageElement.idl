@@ -55,5 +55,10 @@
     readonly attribute long y;
 
     Promise<void> decode();
+
+    // Diagnostics API
+    readonly attribute double estimatedRam;
+    readonly attribute double estimatedGfx;
+    readonly attribute boolean isUsingGfx;
 };
 

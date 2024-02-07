@@ -137,7 +137,11 @@ public:
 
     // Diagnostics API
     float memoryUsageEstimate() { return m_width * m_height * 4; } // Formula from GraphicsLayer::backingStoreMemoryEstimate()
-    void updateMemoryEstimate();
+    void updateMemoryEstimate(const unsigned width, const unsigned height);
+    bool isUsingGfx() { return m_usingGfx; }
+    void setUsingGfx(const bool b) { m_usingGfx = b; }
+    float estimatedRam();
+    float estimatedGfx();
 
 protected:
     HTMLImageElement(const QualifiedName&, Document&, HTMLFormElement* = nullptr, bool createdByParser = false);

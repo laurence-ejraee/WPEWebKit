@@ -95,3 +95,42 @@ function logMemoryAnalysis() {
     console.log("Memory analysis:\n\tImage elements memory usage:\n\t\tEstimated RAM used by the img elements: " + diagnostics.imagesRamEstimate
         + "MB\n\t\tEstimated GFX used by the img elements: " + diagnostics.imagesGfxEstimate + "MB");
 }
+
+function logElementTEST(element) {
+    console.log(element);
+}
+
+function imagesAnalysis() {
+    var images = document.getElementsByTagName("img");
+    var totalRamEstimate = 0;
+    var totalGfxEstimate = 0;
+    var sortedRam = [];
+    var sortedGfx = [];
+
+    for (var i = 0; i < images.length; i++) {
+        if (images[i].estimatedRam > 0 || images[i].estimatedGfx > 0) {
+            totalRamEstimate += images[i].estimatedRam;
+            totalGfxEstimate += images[i].estimatedGfx;
+            images[i].isUsingGfx ? sortedGfx.push([images[i], images[i].estimatedGfx]) : sortedRam.push([images[i], images[i].estimatedRam]);
+        }
+    }
+    sortedRam.sort(function(a,b) {return b[0].estimatedRam - a[0].estimatedRam;});
+    sortedGfx.sort(function(a,b) {return b[0].estimatedGfx - a[0].estimatedGfx;});
+
+    console.log("Memory Analysis for HTML Image elements:" +
+    "\n\tEstimated total RAM used by images: " + totalRamEstimate + "MB" +
+    "\n\tEstimated total GFX used by images: " + totalGfxEstimate + "MB");
+
+    if (sortedRam.length) {
+        console.group("\tRAM use of each Image element (high-low):" +
+        "\n\tImage element:\tEstimated RAM (MB):");
+        console.log(sortedRam);
+        console.groupEnd();
+    }
+    if (sortedGfx.length) {
+        console.group("\tGFX use of each Image element (high-low):" +
+        "\n\tImage element:\tEstimated GFX (MB):");
+        console.log(sortedGfx);
+        console.groupEnd();
+    }
+}

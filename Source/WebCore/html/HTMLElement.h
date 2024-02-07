@@ -147,6 +147,10 @@ protected:
     template<size_t tableSize> static void populateEventHandlerNameMap(EventHandlerNameMap&, const QualifiedName* const (&table)[tableSize]);
     static const AtomString& eventNameForEventHandlerAttribute(const QualifiedName& attributeName, const EventHandlerNameMap&);
 
+    // Diagnostics API
+    float m_memoryEstimate = 0.0f;
+    bool m_usingGfx { false };
+
 private:
     String nodeName() const final;
 
@@ -160,6 +164,7 @@ private:
     static void populateEventHandlerNameMap(EventHandlerNameMap&, const QualifiedName* const table[], size_t tableSize);
     static EventHandlerNameMap createEventHandlerNameMap();
 
+    // Diagnostics API
     String m_uniqueID;
 };
 

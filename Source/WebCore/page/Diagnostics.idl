@@ -45,4 +45,6 @@
     [JSBuiltin] void unregisterRAMcallback();
     [JSBuiltin] void unregisterGFXcallback();
     [JSBuiltin] void logMemoryAnalysis();
+    [JSBuiltin] void logElementTEST(Element element);
+    [JSBuiltin] void imagesAnalysis();
 };
